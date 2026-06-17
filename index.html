@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>体調チェック ｜ おおやけの里</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f1ea;--panel:#fffdf8;--ink:#2b2a28;--ink-soft:#6b675f;--line:#e3ddd0;
+    --staff:#5a6e9c;--staff-d:#46588a;--green:#4a8c6a;--orange:#dd8341;--red:#c0533f;
+    --shadow:0 1px 2px rgba(43,42,40,.05),0 10px 30px rgba(43,42,40,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh;
+    background-image:radial-gradient(circle at 1px 1px,rgba(90,110,156,.05) 1px,transparent 0);background-size:22px 22px;}
+  .wrap{max-width:460px;margin:0 auto;padding:24px 18px 60px}
+  header{text-align:center;margin-bottom:18px}
+  header h1{font-family:"Noto Serif JP",serif;font-size:21px;font-weight:700}
+  header .sub{font-size:11px;color:var(--ink-soft);letter-spacing:.08em;margin-top:3px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px 18px;box-shadow:var(--shadow);margin-bottom:14px}
+  .greet{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .greet .hi{font-size:16px;font-weight:700}
+  .greet .date{margin-left:auto;font-size:12px;color:var(--ink-soft)}
+  .lead{font-size:12px;color:var(--ink-soft);margin-bottom:6px}
+  .q{margin:20px 0}
+  .q>label{font-size:15px;font-weight:700;display:block;margin-bottom:9px}
+  .scale{display:flex;gap:7px}
+  .scale button{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:16px 0;border:1.5px solid var(--line);background:#fff;border-radius:13px;cursor:pointer;color:var(--ink-soft);transition:.12s}
+  .scale button:active{transform:scale(.95)}
+  .scale button.on{background:var(--staff);color:#fff;border-color:var(--staff);transform:scale(1.05);box-shadow:0 4px 12px rgba(90,110,156,.3)}
+  .ends{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:5px;padding:0 4px}
+  textarea{width:100%;font-family:inherit;font-size:14px;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;resize:vertical}
+  textarea:focus{outline:none;border-color:var(--staff)}
+  .btn{width:100%;font-family:inherit;font-size:16px;font-weight:700;padding:16px;border-radius:14px;border:none;background:var(--staff);color:#fff;cursor:pointer;transition:.15s;margin-top:6px}
+  .btn:hover{background:var(--staff-d)}.btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:transparent;color:var(--staff);border:1.5px solid var(--line);font-size:14px;padding:12px}
+  .field{margin-bottom:14px}
+  .field label{font-size:13px;font-weight:600;display:block;margin-bottom:5px}
+  .field input,.field select{width:100%;font-family:inherit;font-size:15px;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--staff)}
+  .done{text-align:center;padding:8px 0}
+  .done .icon{width:64px;height:64px;border-radius:50%;background:var(--green);color:#fff;font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+  .done h2{font-family:"Noto Serif JP",serif;font-size:19px;margin-bottom:4px}
+  .done p{font-size:13px;color:var(--ink-soft)}
+  .summary{display:flex;justify-content:center;gap:18px;margin:16px 0;flex-wrap:wrap}
+  .summary .s{text-align:center}.summary .s .v{font-size:22px;font-weight:700;color:var(--staff)}.summary .s .l{font-size:11px;color:var(--ink-soft)}
+  .status{font-size:12px;text-align:center;margin-top:10px;min-height:18px}
+  .status.err{color:var(--red)}.status.ok{color:var(--green)}
+  .foot{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:8px}
+  .foot a{color:var(--staff);cursor:pointer;text-decoration:underline}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>体調チェック</h1><div class="sub">介護老人保健施設 おおやけの里</div></header>
+  <div id="app"></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+/* ====== Firebase（ooyake-staff）====== */
+const FB={apiKey:"AIzaSyDCkpzd_zGEL5DXNDP8jJPH-WPC51KhBmw",projectId:"ooyake-staff"};
+const COLLECTION="healthChecks";
+
+// 匿名認証：端末ごとに匿名アカウントを1つだけ作り、以後はトークンを更新して使い回す（画面には何も出ません）
+async function getAuthToken(){
+  const RT_KEY='oyake_auth_rt';
+  let rt=null; try{rt=localStorage.getItem(RT_KEY);}catch(e){}
+  if(rt){
+    try{
+      const r=await fetch(`https://securetoken.googleapis.com/v1/token?key=${FB.apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(rt)});
+      if(r.ok)return (await r.json()).id_token;
+    }catch(e){}
+  }
+  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB.apiKey}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
+  if(!r.ok)throw new Error('認証に失敗 HTTP '+r.status);
+  const d=await r.json();
+  try{localStorage.setItem(RT_KEY,d.refreshToken);}catch(e){}
+  return d.idToken;
+}
+const DEPTS=["新館2階","新館3階","本館2階","本館3階","本館4階","デイケア","ヘルパー","予防","居宅介護","相談"];
+
+/* ====== profile (localStorage, fallback to memory) ====== */
+let mem={};
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return mem[k]||null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){mem[k]=v;}}
+const getName=()=>lsGet('hc_name')||'';
+const getDept=()=>lsGet('hc_dept')||'';
+
+/* ====== date helpers (local = JST for 日本) ====== */
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function nowTs(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${today()}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+function jpDate(){const d=new Date();const wd=['日','月','火','水','木','金','土'][d.getDay()];return `${d.getMonth()+1}月${d.getDate()}日(${wd})`;}
+
+/* ====== Firestore REST write ====== */
+async function writeHealth(rec){
+  const docId=encodeURIComponent(`${rec.name}_${rec.date}`.replace(/[\/\\#?]/g,'-'));
+  const url=`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/${COLLECTION}/${docId}?key=${FB.apiKey}`;
+  const body={fields:{
+    name:{stringValue:rec.name},dept:{stringValue:rec.dept||''},date:{stringValue:rec.date},
+    cond:{integerValue:String(rec.cond)},mood:{integerValue:String(rec.mood)},sleep:{integerValue:String(rec.sleep)},
+    avg:{doubleValue:rec.avg},note:{stringValue:rec.note||''},ts:{stringValue:rec.ts}
+  }};
+  const token=await getAuthToken();
+  const res=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+  if(!res.ok)throw new Error('HTTP '+res.status+'：'+(await res.text()).slice(0,200));
+  return res.json();
+}
+
+/* ====== state ====== */
+let draft={cond:0,mood:0,sleep:0,note:''};
+let lastSaved=null;
+
+/* ====== views ====== */
+const app=()=>document.getElementById('app');
+function render(){
+  if(!getName()){renderProfile(true);return;}
+  if(lastSaved){renderDone();return;}
+  renderInput();
+}
+function renderProfile(first){
+  app().innerHTML=`<div class="card">
+    <h2 style="font-family:'Noto Serif JP',serif;font-size:18px;margin-bottom:4px">${first?'はじめに':'設定の変更'}</h2>
+    <p class="lead">お名前と所属を一度だけ設定します（この端末に保存され、次回から自動入力されます）。</p>
+    <div class="field" style="margin-top:14px"><label>お名前</label><input id="p_name" value="${getName()}" placeholder="例：田中 花子"></div>
+    <div class="field"><label>所属</label><select id="p_dept">${DEPTS.map(d=>`<option ${d===getDept()?'selected':''}>${d}</option>`).join('')}</select></div>
+    <button class="btn" id="p_save">この内容ではじめる</button>
+  </div>`;
+  document.getElementById('p_save').onclick=()=>{
+    const nm=document.getElementById('p_name').value.trim();
+    if(!nm){alert('お名前を入力してください');return;}
+    lsSet('hc_name',nm);lsSet('hc_dept',document.getElementById('p_dept').value);
+    draft={cond:0,mood:0,sleep:0,note:''};render();
+  };
+}
+function scale(k,label,lo,hi){
+  return `<div class="q"><label>${label}</label>
+    <div class="scale" data-k="${k}">${[1,2,3,4,5].map(v=>`<button data-v="${v}" class="${draft[k]===v?'on':''}">${v}</button>`).join('')}</div>
+    <div class="ends"><span>${lo}</span><span>${hi}</span></div></div>`;
+}
+function renderInput(){
+  app().innerHTML=`<div class="card">
+    <div class="greet"><span class="hi">${getName()} さん</span><span class="date">📅 ${jpDate()}</span></div>
+    <p class="lead">今日の状態を3つ、タップで選んでください。</p>
+    ${scale('cond','今日の体調','悪い','良い')}
+    ${scale('mood','今の気持ち','悪い','良い')}
+    ${scale('sleep','最近の睡眠','眠れない','よく眠れる')}
+    <div class="q"><label>ひとこと（任意）</label><textarea id="i_note" rows="2" placeholder="気になることがあれば">${draft.note||''}</textarea></div>
+    <button class="btn" id="i_send">送信する</button>
+    <div class="status" id="i_status"></div>
+  </div>`;
+  document.querySelectorAll('.scale').forEach(sc=>{const k=sc.dataset.k;
+    sc.querySelectorAll('button').forEach(b=>b.onclick=()=>{draft[k]=+b.dataset.v;sc.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});});
+  document.getElementById('i_send').onclick=send;
+}
+async function send(){
+  draft.note=document.getElementById('i_note').value.trim();
+  const st=document.getElementById('i_status');
+  if(!draft.cond||!draft.mood||!draft.sleep){st.className='status err';st.textContent='体調・気持ち・睡眠をすべて選んでください。';return;}
+  const btn=document.getElementById('i_send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>送信中…';
+  st.className='status';st.textContent='';
+  const rec={name:getName(),dept:getDept(),date:today(),cond:draft.cond,mood:draft.mood,sleep:draft.sleep,
+    avg:Math.round((draft.cond+draft.mood+draft.sleep)/3*10)/10,note:draft.note,ts:nowTs()};
+  try{
+    await writeHealth(rec);lastSaved=rec;render();
+  }catch(e){
+    btn.disabled=false;btn.textContent='送信する';
+    st.className='status err';st.textContent='送信に失敗しました：'+e.message;
+  }
+}
+function renderDone(){
+  const r=lastSaved;
+  app().innerHTML=`<div class="card"><div class="done">
+    <div class="icon">✓</div><h2>記録しました</h2><p>${getName()} さん、お疲れさまです。<br>${jpDate()} の記録を送信しました。</p>
+    <div class="summary">
+      <div class="s"><div class="v">${r.cond}</div><div class="l">体調</div></div>
+      <div class="s"><div class="v">${r.mood}</div><div class="l">気持ち</div></div>
+      <div class="s"><div class="v">${r.sleep}</div><div class="l">睡眠</div></div></div>
+    ${r.note?`<p style="background:var(--bg);border-radius:10px;padding:8px 12px;margin-top:4px">📝 ${r.note}</p>`:''}
+    </div>
+    <button class="btn ghost" id="d_edit" style="margin-top:10px">今日の記録を修正する</button>
+  </div>`;
+  document.getElementById('d_edit').onclick=()=>{draft={cond:r.cond,mood:r.mood,sleep:r.sleep,note:r.note};lastSaved=null;render();};
+}
+
+/* ====== foot ====== */
+function renderFoot(){
+  const f=document.getElementById('foot');
+  if(getName())f.innerHTML=`記録は安全に保存されます　｜　<a id="f_prof">名前・所属の変更</a>`;
+  else f.innerHTML='';
+  const fp=document.getElementById('f_prof');if(fp)fp.onclick=()=>{lastSaved=null;renderProfile(false);};
+}
+const _render=render;render=function(){_render();renderFoot();};
+render();
+</script>
+</body>
+</html>
