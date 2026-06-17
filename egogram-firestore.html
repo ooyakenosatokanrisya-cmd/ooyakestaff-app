@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>エゴグラム診断</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f4f0;
+    --white: #ffffff;
+    --border: #ddd8d0;
+    --border-light: #eceae5;
+    --text: #3a3530;
+    --text-sub: #7a7068;
+    --text-muted: #b0a898;
+    --cp: #e05c5c; --np: #3aad6e; --a: #3a7fe0; --fc: #e09b3a; --ac: #9b5ce0;
+    --cp-bg: #fef2f2; --np-bg: #f0faf4; --a-bg: #f0f5ff; --fc-bg: #fef8ee; --ac-bg: #f8f2ff;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
+    --shadow: 0 4px 20px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.05);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
+    --radius: 16px; --radius-sm: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-weight: 400; min-height: 100vh; letter-spacing: 0.02em; }
+
+  /* ナビ */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(247,244,240,0.95); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 56px;
+  }
+  .nav-logo { font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 18px; font-weight: 400; }
+  .nav-btns { display: flex; gap: 8px; }
+  .nav-btn {
+    background: transparent; border: 1.5px solid var(--border); color: var(--text-sub);
+    padding: 6px 14px; border-radius: 100px; font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .nav-btn:hover { border-color: var(--text); color: var(--text); }
+  .nav-btn.active { background: #7a9ec8; border-color: #7a9ec8; color: var(--white); }
+
+  /* ページ共通 */
+  .page { max-width: 720px; margin: 0 auto; padding: 40px 20px 100px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ヘッダー */
+  .header { text-align: center; margin-bottom: 48px; }
+  .header-badge {
+    display: inline-block; background: #7a9ec8; color: var(--white);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
+    padding: 5px 14px; border-radius: 100px; margin-bottom: 18px; text-transform: uppercase;
+  }
+  .header h1 { font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: clamp(28px, 5vw, 42px); font-weight: 400; letter-spacing: -0.01em; line-height: 1.3; margin-bottom: 12px; }
+  .header h1 em {  color: var(--text-sub); }
+  .header p { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
+
+  /* カード */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  }
+
+  /* 入力フォーム */
+  .input-card { padding: 28px; margin-bottom: 24px; }
+  .input-card h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; font-weight: 500; color: var(--text-sub); }
+  .form-input {
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 14px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text);
+    transition: border-color 0.15s; outline: none; width: 100%;
+  }
+  .form-input:focus { border-color: var(--text); background: var(--white); }
+  select.form-input { cursor: pointer; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a09890' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  .year-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--a-bg); border: 1px solid #b0caf0; color: var(--a);
+    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 100px;
+  }
+
+  /* プログレス */
+  .progress-card {
+    padding: 18px 22px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .progress-ring { flex-shrink: 0; position: relative; width: 48px; height: 48px; }
+  .progress-ring svg { transform: rotate(-90deg); }
+  .progress-ring-bg { fill: none; stroke: var(--border); stroke-width: 3; }
+  .progress-ring-fill { fill: none; stroke: var(--text); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 126; stroke-dashoffset: 126; transition: stroke-dashoffset 0.4s ease; }
+  .progress-ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .progress-text { flex: 1; }
+  .progress-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .progress-sub { font-size: 12px; color: var(--text-muted); }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 7px; }
+  .progress-bar-fill { height: 100%; background: var(--text); transition: width 0.3s; }
+
+  /* セクションヘッダー */
+  .section-header { display: flex; align-items: center; gap: 10px; margin: 36px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .section-chip { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px; border: 1.5px solid; letter-spacing: 0.05em; }
+  .section-name { font-size: 12px; color: var(--text-sub); }
+
+  /* 質問カード */
+  .q-card {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 10px; transition: border-color 0.2s;
+    animation: slideUp 0.25s ease both;
+  }
+  .q-card.answered { border-color: var(--border-light); background: #fdfcfb; }
+  .q-num-line { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .q-num { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.1em; }
+  .q-num-bar { flex: 1; height: 1px; background: var(--border-light); }
+  .q-text { font-size: 14px; line-height: 1.75; margin-bottom: 14px; }
+  .opts { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
+  .opt {
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 3px 8px; cursor: pointer; text-align: center; font-family: 'Noto Sans JP', sans-serif;
+    font-size: 10px; color: var(--text-sub); line-height: 1.3; transition: all 0.12s;
+  }
+  .opt:hover { background: var(--white); border-color: #b8b0a8; color: var(--text); }
+  .opt .opt-n { display: block; font-size: 16px; font-weight: 600; margin-bottom: 2px; color: var(--text-muted); transition: color 0.12s; }
+  .opt.sel-0 { background:#f4f4f4; border-color:#c8c4c0; } .opt.sel-0 .opt-n { color:#888; }
+  .opt.sel-1 { background:#f0f5ff; border-color:var(--a); } .opt.sel-1 .opt-n { color:var(--a); }
+  .opt.sel-2 { background:#f0f8ff; border-color:#5a9fe8; } .opt.sel-2 .opt-n { color:#5a9fe8; }
+  .opt.sel-3 { background:#fef3e8; border-color:var(--fc); } .opt.sel-3 .opt-n { color:var(--fc); }
+  .opt.sel-4 { background:#fff0f0; border-color:var(--cp); } .opt.sel-4 .opt-n { color:var(--cp); }
+
+  /* ボタン類 */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #7a9ec8; color: var(--white); border: none; border-radius: 100px;
+    padding: 14px 40px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow);
+  }
+  .btn-primary:hover:not(:disabled) { background: #6a8eb8; transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; box-shadow: none; transform: none; }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; border: 1.5px solid var(--border); color: var(--text-sub);
+    padding: 10px 22px; border-radius: 100px; font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+  .submit-wrap { text-align: center; margin-top: 48px; }
+  .remaining-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
+  /* ===== 結果画面 ===== */
+  .result-header { text-align: center; margin-bottom: 40px; }
+  .result-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .result-meta { font-size: 13px; color: var(--text-sub); }
+
+  /* グラフ */
+  .chart-card { padding: 28px 24px 20px; margin-bottom: 18px; }
+  .card-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 24px; }
+  .bars-outer { display: flex; gap: 4px; align-items: flex-end; }
+  .y-axis { display: flex; flex-direction: column; justify-content: space-between; height: 180px; width: 22px; flex-shrink: 0; }
+  .y-tick { font-size: 9px; color: var(--text-muted); text-align: right; line-height: 1; }
+  .bars-inner { flex: 1; position: relative; height: 180px; }
+  .grid-bg { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+  .grid-row { width: 100%; height: 1px; background: var(--border-light); }
+  .avg-line { position: absolute; left: 0; right: 0; bottom: 50%; border-top: 1.5px dashed #c8c0b8; pointer-events: none; }
+  .avg-label { position: absolute; right: 4px; top: -15px; font-size: 9px; color: var(--text-muted); background: var(--white); padding: 1px 4px; }
+  .bars-flex { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: space-around; padding: 0 6px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; max-width: 76px; height: 100%; justify-content: flex-end; }
+  .bar-score { font-size: 16px; font-weight: 600; line-height: 1; display: block; }
+  .bar-pct { font-size: 9px; color: var(--text-muted); }
+  .bar-body { width: 100%; border-radius: 5px 5px 0 0; transition: height 1s cubic-bezier(0.34,1.4,0.64,1); min-height: 3px; }
+  .bar-lbl { font-size: 12px; font-weight: 600; }
+  .bar-name { font-size: 9px; color: var(--text-muted); text-align: center; }
+
+  /* スコア表 */
+  .score-table { overflow: hidden; margin-bottom: 18px; }
+  .stc-head { display: grid; grid-template-columns: 2.5fr 56px 56px 56px 76px; padding: 10px 18px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .stc-row { display: grid; grid-template-columns: 2.5fr 56px 56px 56px 76px; padding: 13px 18px; border-bottom: 1px solid var(--border-light); align-items: center; transition: background 0.1s; }
+  .stc-row:last-child { border-bottom: none; }
+  .stc-row:hover { background: var(--bg); }
+  .stc-name { font-size: 13px; font-weight: 500; }
+  .stc-mini { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .stc-mini-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+  .stc-val { font-size: 15px; font-weight: 600; }
+  .stc-max { font-size: 11px; color: var(--text-muted); }
+  .stc-pct { font-size: 12px; color: var(--text-sub); }
+  .badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px; }
+  .badge-high { background: #fef2f2; color: var(--cp); }
+  .badge-mid  { background: #f0f5ff; color: var(--a); }
+  .badge-low  { background: #f5f5f5; color: var(--text-muted); }
+
+  /* 尺度詳細 */
+  .detail-card { overflow: hidden; margin-bottom: 12px; transition: box-shadow 0.2s; }
+  .detail-card:hover { box-shadow: var(--shadow); }
+  .dc-stripe { height: 4px; }
+  .dc-body { padding: 20px 22px; }
+  .dc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .dc-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .dc-full { font-size: 11px; color: var(--text-muted); }
+  .dc-score { font-size: 28px; font-weight: 600; line-height: 1; }
+  .dc-score-sub { font-size: 11px; color: var(--text-muted); text-align: right; }
+  .dc-bar-wrap { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+  .dc-bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(0.34,1.2,0.64,1); }
+  .dc-comment { font-size: 13px; line-height: 1.85; color: var(--text-sub); background: var(--bg); border-radius: var(--radius-sm); padding: 13px 15px; margin-bottom: 12px; }
+  .dc-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: 100px; border: 1px solid; font-weight: 500; }
+  .tag-plus { background: var(--np-bg); border-color: #a8e0c0; color: #2a7a50; }
+  .tag-minus { background: var(--ac-bg); border-color: #c8a8e8; color: #6a3a9a; }
+
+  /* 総合 */
+  .summary-card { background: #5a7a9a; border-radius: var(--radius); padding: 28px 26px; margin-bottom: 14px; color: var(--white); }
+  .summary-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2em; color: rgba(255,255,255,0.45); margin-bottom: 8px; text-transform: uppercase; }
+  .summary-pattern { font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 20px; color: var(--white); margin-bottom: 12px; }
+  .summary-text { font-size: 13px; line-height: 1.9; color: rgba(255,255,255,0.85); }
+
+  /* アドバイス */
+  .advice-card { padding: 24px 26px; margin-bottom: 28px; }
+  .advice-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px; }
+  .advice-item { display: flex; gap: 10px; font-size: 13px; line-height: 1.8; color: var(--text-sub); padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+  .advice-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .advice-item:first-child { padding-top: 0; }
+  .advice-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text); flex-shrink: 0; margin-top: 9px; }
+
+  /* 保存成功 */
+  .save-banner {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--np-bg); border: 1px solid #a8e0c0; border-radius: var(--radius-sm);
+    padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #2a7a50;
+  }
+  .save-banner svg { flex-shrink: 0; }
+
+  /* ===== 個人履歴画面 ===== */
+  .history-search { display: flex; gap: 10px; margin-bottom: 24px; }
+  .history-search .form-input { flex: 1; }
+  .history-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+
+  .person-card { padding: 20px 22px; margin-bottom: 14px; cursor: pointer; transition: box-shadow 0.15s; }
+  .person-card:hover { box-shadow: var(--shadow); }
+  .person-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .person-info h3 { font-size: 15px; font-weight: 600; }
+  .person-info p { font-size: 12px; color: var(--text-sub); }
+  .person-years { display: flex; gap: 6px; flex-wrap: wrap; }
+  .year-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; background: var(--a-bg); border: 1px solid #b0caf0; color: var(--a); border-radius: 100px; }
+
+  /* 年度別ミニグラフ */
+  .mini-bars { display: flex; align-items: flex-end; gap: 8px; height: 44px; }
+  .mini-scale { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .mini-bar { width: 28px; border-radius: 3px 3px 0 0; transition: height 0.8s ease; }
+  .mini-lbl { font-size: 9px; font-weight: 600; }
+
+  /* 詳細モーダル */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 40px 16px; overflow-y: auto;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--white); border-radius: var(--radius); width: 100%; max-width: 700px;
+    box-shadow: var(--shadow-lg); transform: translateY(20px); transition: transform 0.25s ease;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .modal-header h3 { font-size: 17px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px 8px; border-radius: 6px; }
+  .modal-close:hover { background: var(--bg); color: var(--text); }
+  .modal-body { padding: 24px; }
+
+  /* 年度タブ */
+  .year-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .year-tab { font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: 100px; border: 1.5px solid var(--border); color: var(--text-sub); cursor: pointer; background: transparent; font-family: 'Noto Sans JP', sans-serif; transition: all 0.12s; }
+  .year-tab.active { background: var(--text); border-color: var(--text); color: var(--white); }
+
+  /* 年度比較グラフ */
+  .compare-wrap { margin-bottom: 20px; }
+  .compare-title { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
+  .compare-bars { display: flex; gap: 20px; }
+  .compare-scale { flex: 1; }
+  .compare-scale-name { font-size: 11px; font-weight: 600; text-align: center; margin-bottom: 6px; }
+  .compare-bar-group { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 80px; }
+  .compare-bar { width: 18px; border-radius: 3px 3px 0 0; transition: height 0.8s ease; position: relative; }
+  .compare-bar-tip { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; white-space: nowrap; }
+  .compare-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+  .compare-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-sub); }
+  .compare-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ===== 管理画面 ===== */
+  .admin-login { max-width: 380px; margin: 40px auto; padding: 32px; }
+  .admin-login h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; text-align: center; }
+  .admin-error { font-size: 12px; color: var(--cp); margin-top: 8px; display: none; }
+
+  .admin-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .admin-toolbar .form-input { max-width: 200px; }
+  .filter-select {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--text);
+    outline: none; cursor: pointer;
+  }
+
+  /* 管理テーブル */
+  .admin-table-wrap { overflow-x: auto; }
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .admin-table th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--text-muted); text-transform: uppercase; background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .admin-table td { padding: 11px 12px; border-bottom: 1px solid var(--border-light); color: var(--text-sub); vertical-align: middle; }
+  .admin-table tr:last-child td { border-bottom: none; }
+  .admin-table tr:hover td { background: var(--bg); }
+  .td-name { font-weight: 600; color: var(--text); font-size: 13px; }
+  .score-pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 100px; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 18px; }
+  .stat-card { padding: 16px; border-radius: var(--radius-sm); text-align: center; }
+  .stat-val { font-size: 22px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+
+  .btn-danger {
+    background: transparent; border: 1.5px solid #e8b0b0; color: var(--cp);
+    padding: 6px 14px; border-radius: 100px; font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-danger:hover { background: #fef2f2; }
+
+  /* CSV */
+  .btn-csv {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--np-bg); border: 1px solid #a8e0c0; color: #2a7a50;
+    padding: 9px 18px; border-radius: 100px; font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-csv:hover { background: #d8f5e8; }
+
+  /* クラウド同期ステータス */
+  .cloud-note { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; }
+
+  /* アニメ */
+  @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: slideUp 0.4s ease both; }
+
+  /* レスポンシブ */
+  @media (max-width:520px) {
+    .page { padding: 28px 14px 80px; }
+    .form-row { grid-template-columns: 1fr; }
+    .opts { gap: 3px; }
+    .opt { font-size: 9px; padding: 8px 2px; }
+    .opt .opt-n { font-size: 13px; }
+    .nav-logo { font-size: 15px; }
+    .stats-row { grid-template-columns: repeat(3,1fr); }
+    .compare-bars { gap: 10px; }
+    .compare-bar { width: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ナビ -->
+<nav class="nav">
+  <span class="nav-logo">Egogram</span>
+  <div class="nav-btns">
+    <button class="nav-btn active" onclick="switchScreen('quiz')">診断</button>
+    <button class="nav-btn" onclick="switchScreen('history')">履歴</button>
+    <button class="nav-btn" onclick="switchScreen('admin')">管理</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ======= 診断画面 ======= -->
+  <div id="screen-quiz" class="screen active">
+    <div class="header fade-up">
+      <span class="header-badge">Self Assessment</span>
+      <h1>エゴグラム<br>診断テスト</h1>
+      <p>各質問について、自分に当てはまる程度を選んでください。<br>正解・不正解はありません。直感で答えてください。</p>
+    </div>
+
+    <!-- 入力フォーム -->
+    <div class="card input-card fade-up">
+      <h3>基本情報</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>氏名</label>
+          <input class="form-input" id="input-name" type="text" placeholder="例：山田 太郎" oninput="checkForm()">
+        </div>
+        <div class="form-group">
+          <label>部署</label>
+          <select class="form-input" id="input-dept" onchange="checkForm()"><option value="">選んでください</option><option>新館2階</option><option>新館3階</option><option>本館2階</option><option>本館3階</option><option>本館4階</option><option>デイケア</option><option>ヘルパー</option><option>予防</option><option>居宅介護</option><option>相談</option></select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--text-sub);">実施年度：</span>
+        <span class="year-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span id="current-year"></span>年度
+        </span>
+      </div>
+    </div>
+
+    <!-- プログレス -->
+    <div class="card progress-card fade-up">
+      <div class="progress-ring">
+        <svg viewBox="0 0 48 48" width="48" height="48">
+          <circle class="progress-ring-bg" cx="24" cy="24" r="20"/>
+          <circle class="progress-ring-fill" id="ring-fill" cx="24" cy="24" r="20"/>
+        </svg>
+        <div class="progress-ring-num" id="ring-num">0%</div>
+      </div>
+      <div class="progress-text">
+        <div class="progress-title" id="prog-title">回答を始めてください</div>
+        <div class="progress-sub" id="prog-sub">全50問</div>
+        <div class="progress-bar"><div class="progress-bar-fill" id="prog-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div id="questions-container"></div>
+
+    <div class="submit-wrap">
+      <button class="btn-primary" id="submit-btn" disabled onclick="submitResult()">診断結果を見る →</button>
+      <p class="remaining-note" id="remaining-note">氏名・部署を入力し、すべての質問に答えてください</p>
+    </div>
+  </div>
+
+  <!-- ======= 結果画面 ======= -->
+  <div id="screen-result" class="screen">
+    <div class="result-header fade-up">
+      <span class="header-badge">Result</span>
+      <div class="result-name" id="result-name"></div>
+      <div class="result-meta" id="result-meta"></div>
+    </div>
+
+    <div id="save-banner" class="save-banner" style="display:none;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      データを保存しました。来年度以降も同じ氏名・部署で診断すると、成長の変化を確認できます。
+    </div>
+
+    <div class="card chart-card fade-up">
+      <p class="card-label">Egogram Profile</p>
+      <div class="bars-outer">
+        <div class="y-axis">
+          <span class="y-tick">40</span><span class="y-tick">30</span>
+          <span class="y-tick">20</span><span class="y-tick">10</span><span class="y-tick">0</span>
+        </div>
+        <div class="bars-inner">
+          <div class="grid-bg">
+            <div class="grid-row"></div><div class="grid-row"></div>
+            <div class="grid-row"></div><div class="grid-row"></div><div class="grid-row"></div>
+          </div>
+          <div class="avg-line"><span class="avg-label">平均（20点）</span></div>
+          <div class="bars-flex" id="chart-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card score-table fade-up">
+      <div class="stc-head"><span>尺度</span><span>得点</span><span>満点</span><span>割合</span><span>レベル</span></div>
+      <div id="score-table-body"></div>
+    </div>
+
+    <div id="scale-details"></div>
+
+    <div class="summary-card fade-up">
+      <p class="summary-label">Overall Pattern</p>
+      <p class="summary-pattern" id="summary-pattern"></p>
+      <p class="summary-text" id="summary-text"></p>
+    </div>
+
+    <div class="card advice-card fade-up">
+      <p class="advice-label">Advice</p>
+      <div id="advice-items"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="switchScreen('history')">履歴を見る</button>
+      <button class="btn-secondary" onclick="resetQuiz()">もう一度診断する</button>
+    </div>
+  </div>
+
+  <!-- ======= 履歴画面 ======= -->
+  <div id="screen-history" class="screen">
+    <div class="header fade-up">
+      <span class="header-badge">History</span>
+      <h1>個人履歴</h1>
+      <p>氏名を検索して過去の診断結果を確認できます</p>
+    </div>
+
+    <div class="history-search">
+      <input class="form-input" id="history-search" type="text" placeholder="氏名または部署で検索..." oninput="renderHistory()">
+    </div>
+
+    <div id="history-list"></div>
+  </div>
+
+  <!-- ======= 管理画面 ======= -->
+  <div id="screen-admin" class="screen">
+
+    <!-- ログイン -->
+    <div id="admin-login-wrap">
+      <div class="card admin-login fade-up">
+        <h3>管理者ログイン</h3>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>パスワード</label>
+          <input class="form-input" id="admin-pw" type="password" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')adminLogin()">
+        </div>
+        <p class="admin-error" id="admin-error">パスワードが違います</p>
+        <button class="btn-primary" style="width:100%;justify-content:center;margin-top:16px;" onclick="adminLogin()">ログイン</button>
+        <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:12px;">初期パスワード：admin1234</p>
+      </div>
+    </div>
+
+    <!-- 管理パネル -->
+    <div id="admin-panel" style="display:none;">
+      <div class="header fade-up">
+        <span class="header-badge">Admin</span>
+        <h1>管理パネル</h1>
+      </div>
+
+      <div class="stats-row" id="admin-stats"></div>
+
+      <div class="admin-toolbar">
+        <input class="form-input" id="admin-search" type="text" placeholder="氏名・部署で検索..." oninput="renderAdminTable()">
+        <select class="filter-select" id="admin-year-filter" onchange="renderAdminTable()">
+          <option value="">全年度</option>
+        </select>
+        <button class="btn-csv" onclick="downloadCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSVダウンロード
+        </button>
+        <button class="btn-danger" onclick="clearAllData()">全データ削除</button>
+      </div>
+
+      <div class="card" style="overflow:hidden;">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>氏名</th><th>部署</th><th>年度</th>
+                <th>CP</th><th>NP</th><th>A</th><th>FC</th><th>AC</th>
+                <th>パターン</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- 個人詳細モーダル -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title"></h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// データ定義
+// ============================================================
+const QUESTIONS = [
+  {id:'cp1',scale:'CP',text:'物事の善悪についてはっきり意見を言う方だ。'},
+  {id:'cp2',scale:'CP',text:'間違ったことをした人をきつく叱ることがある。'},
+  {id:'cp3',scale:'CP',text:'ルールや規則はきちんと守られるべきだと強く思う。'},
+  {id:'cp4',scale:'CP',text:'「〜すべき」「〜しなければならない」という言い方をよくする。'},
+  {id:'cp5',scale:'CP',text:'人の言動が気になって批判したくなることがある。'},
+  {id:'cp6',scale:'CP',text:'仕事のクオリティについて妥協したくない。'},
+  {id:'cp7',scale:'CP',text:'社会的な正義感が強く、不正を見ると黙っていられない。'},
+  {id:'cp8',scale:'CP',text:'他人の行動が間違っていると感じると、指摘せずにはいられない。'},
+  {id:'cp9',scale:'CP',text:'理想が高く、それに届かないことにいらだちを感じる。'},
+  {id:'cp10',scale:'CP',text:'「こうあるべき」という価値観を大切にして行動している。'},
+  {id:'np1',scale:'NP',text:'困っている人を見ると、自然に手を差し伸べたくなる。'},
+  {id:'np2',scale:'NP',text:'人の話をじっくり聞いて、相手の気持ちを大切にする。'},
+  {id:'np3',scale:'NP',text:'周りの人を励ましたり褒めたりすることが多い。'},
+  {id:'np4',scale:'NP',text:'人が失敗しても、責めずに温かく接することができる。'},
+  {id:'np5',scale:'NP',text:'他の人の世話をすることに充実感を感じる。'},
+  {id:'np6',scale:'NP',text:'人の悩みや相談に乗ることが多く、頼られやすい。'},
+  {id:'np7',scale:'NP',text:'相手の立場や気持ちになって物事を考えようとする。'},
+  {id:'np8',scale:'NP',text:'チームや周囲の雰囲気を和やかに保つことを心がけている。'},
+  {id:'np9',scale:'NP',text:'誰かのために何かをしてあげることに喜びを感じる。'},
+  {id:'np10',scale:'NP',text:'人の長所を見つけて、積極的に伝えるようにしている。'},
+  {id:'a1',scale:'A',text:'物事を感情より論理や事実をもとに判断することが多い。'},
+  {id:'a2',scale:'A',text:'計画を立てて、効率的に仕事を進めることが得意だ。'},
+  {id:'a3',scale:'A',text:'重要な決断をするときは情報を集めてから判断する。'},
+  {id:'a4',scale:'A',text:'冷静に状況を分析してから行動する。'},
+  {id:'a5',scale:'A',text:'感情的にならずに、客観的な視点を保てる方だ。'},
+  {id:'a6',scale:'A',text:'費用や時間などを現実的に計算して行動する。'},
+  {id:'a7',scale:'A',text:'問題が起きたとき、原因を論理的に考えて対処する。'},
+  {id:'a8',scale:'A',text:'自分の意見を述べるとき、根拠を示すようにしている。'},
+  {id:'a9',scale:'A',text:'感情よりも現実的な結果を重視して行動することが多い。'},
+  {id:'a10',scale:'A',text:'複数の選択肢を比較・検討してから決める。'},
+  {id:'fc1',scale:'FC',text:'楽しいことやおもしろいことに積極的に参加する。'},
+  {id:'fc2',scale:'FC',text:'好奇心が旺盛で、新しいことに興味を持ちやすい。'},
+  {id:'fc3',scale:'FC',text:'感情を素直に表に出せる方だ。'},
+  {id:'fc4',scale:'FC',text:'ユーモアがあると言われることがある。'},
+  {id:'fc5',scale:'FC',text:'自分の直感や気持ちを大切にして行動することがある。'},
+  {id:'fc6',scale:'FC',text:'遊び心があり、堅苦しい雰囲気を和らげることができる。'},
+  {id:'fc7',scale:'FC',text:'やりたいことには熱中して取り組む。'},
+  {id:'fc8',scale:'FC',text:'自由に発想したり、アイデアを出すことが好きだ。'},
+  {id:'fc9',scale:'FC',text:'感動や喜びをストレートに表現することができる。'},
+  {id:'fc10',scale:'FC',text:'規則よりも自分の感覚を優先したくなることがある。'},
+  {id:'ac1',scale:'AC',text:'周りの人の期待に応えようと努力する。'},
+  {id:'ac2',scale:'AC',text:'人に嫌われないように言動に気をつけることが多い。'},
+  {id:'ac3',scale:'AC',text:'自分の意見より場の空気を読んで合わせることが多い。'},
+  {id:'ac4',scale:'AC',text:'叱られたり批判されると、必要以上に落ち込む。'},
+  {id:'ac5',scale:'AC',text:'本当はNoと言いたいのに、Yesと言ってしまうことがある。'},
+  {id:'ac6',scale:'AC',text:'自分がどう思われるかを気にして行動することがある。'},
+  {id:'ac7',scale:'AC',text:'上司や権限のある人の言うことには従いやすい。'},
+  {id:'ac8',scale:'AC',text:'他人の評価や承認が自分のモチベーションに大きく影響する。'},
+  {id:'ac9',scale:'AC',text:'波風を立てないことを大切にしている。'},
+  {id:'ac10',scale:'AC',text:'自己主張するより我慢することの方が多い。'},
+];
+
+const SCALE_ORDER = ['CP','NP','A','FC','AC'];
+const MAX = 40;
+const ADMIN_PW = 'admin1234';
+
+const SCALES = {
+  CP:{label:'CP',name:'批判的な親',hex:'#e05c5c',bg:'#fef2f2',full:'Critical Parent（批判的な親）',
+    desc_high:'責任感・正義感・理想が非常に強い状態です。高い水準を求め、チームの規律を保つ力があります。一方で、周囲への要求が厳しくなりすぎたり、批判的な言動が増えてプレッシャーを与えてしまう場合があります。',
+    desc_mid:'適度な責任感と価値観を持ちつつ、場に応じて柔軟に対応できる状態です。規律と人間関係のバランスが取れています。',
+    desc_low:'他者への批判や要求が少なく、穏やかな印象を与えます。ただし、問題点を指摘する場面で積極性が不足することがあります。',
+    plus_high:['責任感が強い','高い基準を持つ','正義感がある','規律を保つ'],minus_high:['批判的になりすぎる','プレッシャーを与えやすい','柔軟性が下がる'],
+    plus_low:['穏やか','批判しない','受け入れる力がある'],minus_low:['指摘が苦手','リーダーシップが弱い'],
+    plus_mid:['規律と柔軟性のバランスが良い'],minus_mid:[]},
+  NP:{label:'NP',name:'養育的な親',hex:'#3aad6e',bg:'#f0faf4',full:'Nurturing Parent（養育的な親）',
+    desc_high:'思いやりと共感力が非常に強い状態です。チームメンバーの支援や後輩育成において力を発揮します。ただし、世話を焼きすぎることで自分が疲弊することがあります。',
+    desc_mid:'思いやりを持ちつつ、相手の自立も尊重できる状態です。支援と自律のバランスが取れています。',
+    desc_low:'過保護にならず相手の自立を促せますが、困っている人への気配りが不足することがあります。',
+    plus_high:['思いやりが深い','頼られやすい','雰囲気を和らげる','育成が得意'],minus_high:['過保護になりやすい','自分を後回しにしすぎる'],
+    plus_low:['自立を尊重する'],minus_low:['気配りが不足することがある'],
+    plus_mid:['支援と自律のバランスが良い'],minus_mid:[]},
+  A:{label:'A',name:'大人',hex:'#3a7fe0',bg:'#f0f5ff',full:'Adult（大人）',
+    desc_high:'論理的・合理的な判断力が非常に高い状態です。データや事実をもとに冷静に意思決定できます。感情的なコミュニケーションが苦手になることがあります。',
+    desc_mid:'論理と感情のバランスが取れており、状況に応じて対応できる状態です。',
+    desc_low:'感情や直感を重視する傾向があります。論理に基づいた判断を意識的に取り入れると精度が上がります。',
+    plus_high:['論理的','冷静','計画力がある','客観的'],minus_high:['感情的なつながりが薄れやすい','融通が利かない印象'],
+    plus_low:['感情的に共感できる','直感が働く','柔軟'],minus_low:['論理的判断が弱い','計画性が不足することがある'],
+    plus_mid:['論理と感情のバランスが良い'],minus_mid:[]},
+  FC:{label:'FC',name:'自由な子ども',hex:'#e09b3a',bg:'#fef8ee',full:'Free Child（自由な子ども）',
+    desc_high:'感受性・自発性・創造性が非常に高い状態です。チームに活気をもたらし、新しいアイデアを積極的に出します。衝動的な行動や計画性の不足が課題になることがあります。',
+    desc_mid:'自発性と協調性のバランスが取れており、楽しさを持ちながらも責任ある行動ができます。',
+    desc_low:'感情を抑えて周囲に合わせる傾向があります。自己表現を意識的に解放することで活力が増します。',
+    plus_high:['創造性が高い','活発','好奇心旺盛','チームに活気を与える'],minus_high:['衝動的になりやすい','計画性が不足'],
+    plus_low:['落ち着いている','ルールを守る','安定感がある'],minus_low:['自己表現が苦手','ストレスをため込みやすい'],
+    plus_mid:['自発性と安定のバランスが良い'],minus_mid:[]},
+  AC:{label:'AC',name:'順応した子ども',hex:'#9b5ce0',bg:'#f8f2ff',full:'Adapted Child（順応した子ども）',
+    desc_high:'協調性・気配り・従順さが非常に強い状態です。チームワークを支え、摩擦を避ける力があります。自己主張が苦手で、ストレスをため込みやすい傾向があります。',
+    desc_mid:'周囲への配慮と自己主張のバランスが取れている状態です。協調しながら自分の意見を伝えられます。',
+    desc_low:'自己主張が明確で積極的に発言できます。ただし、協調することが苦手になる場合があります。',
+    plus_high:['協調性が高い','摩擦を避ける','チームの和を保つ'],minus_high:['自己主張が苦手','ストレスをため込みやすい','本音が言えない'],
+    plus_low:['自己主張が明確','意見をはっきり言える'],minus_low:['協調性が不足することがある','摩擦が起きやすい'],
+    plus_mid:['協調と自立のバランスが良い'],minus_mid:[]},
+};
+
+const OPTIONS = [
+  {val:0,label:'全くない'},{val:1,label:'あまりない'},
+  {val:2,label:'どちらとも\nいえない'},{val:3,label:'ややある'},{val:4,label:'よくある'},
+];
+
+// ============================================================
+// 状態
+// ============================================================
+const answers = {};
+let currentYear = new Date().getFullYear();
+document.getElementById('current-year').textContent = currentYear;
+
+// ============================================================
+// ストレージ操作（この端末＝localStorage）
+// ============================================================
+const STORAGE_KEY = 'egogram_records';
+
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+
+function saveRecord(record) {
+  const records = loadRecords();
+  // 識別キーは「氏名＋年度」のみ（部署は記録するが識別に使わない）
+  const idx = records.findIndex(r => r.name === record.name && r.year === record.year);
+  if (idx >= 0) records[idx] = record; else records.push(record);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function deleteRecord(name, year) {
+  const records = loadRecords().filter(r => !(r.name===name && r.year===year));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+// ============================================================
+// Firestore 連携（ooyake-staff / egograms コレクション）
+//  ※ ダッシュボードが読み込む形に合わせて保存する
+// ============================================================
+const FB_CONFIG = { apiKey: "AIzaSyDCkpzd_zGEL5DXNDP8jJPH-WPC51KhBmw", projectId: "ooyake-staff" };
+
+async function writeToFirestore(record) {
+  const docId = encodeURIComponent(`${record.name}_${record.year}`.replace(/[\/\\#?]/g, '-'));
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/egograms/${docId}?key=${FB_CONFIG.apiKey}`;
+  const date = (record.savedAt || '').slice(0, 10);
+  const body = { fields: {
+    name:    { stringValue: record.name },
+    dept:    { stringValue: record.dept || '' },
+    year:    { stringValue: String(record.year) },
+    date:    { stringValue: date },
+    cp:      { integerValue: String(record.scores.CP) },
+    np:      { integerValue: String(record.scores.NP) },
+    a:       { integerValue: String(record.scores.A) },
+    fc:      { integerValue: String(record.scores.FC) },
+    ac:      { integerValue: String(record.scores.AC) },
+    pattern: { stringValue: record.pattern || '' },
+    ts:      { stringValue: record.savedAt || '' }
+  }};
+  const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error('HTTP ' + res.status + '：' + (await res.text()).slice(0, 160));
+  return res.json();
+}
+
+// ============================================================
+// ナビ
+// ============================================================
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const navIdx = ['quiz','history','admin'].indexOf(name);
+  if (navIdx >= 0) document.querySelectorAll('.nav-btn')[navIdx].classList.add('active');
+  if (name === 'history') renderHistory();
+  if (name === 'admin') renderAdminPanel();
+  window.scrollTo(0,0);
+}
+
+// ============================================================
+// 診断
+// ============================================================
+function buildQuestions() {
+  const con = document.getElementById('questions-container');
+  con.innerHTML = '';
+  const sec = {CP:[],NP:[],A:[],FC:[],AC:[]};
+  QUESTIONS.forEach(q => sec[q.scale].push(q));
+  SCALE_ORDER.forEach(scale => {
+    const s = SCALES[scale];
+    const sh = document.createElement('div');
+    sh.className = 'section-header';
+    sh.innerHTML = `<span class="section-chip" style="color:${s.hex};border-color:${s.hex};background:${s.bg}">${s.label}</span><span class="section-name">${s.name}</span>`;
+    con.appendChild(sh);
+    sec[scale].forEach((q,i) => {
+      const qIdx = QUESTIONS.indexOf(q)+1;
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.style.animationDelay = (i*0.02)+'s';
+      card.dataset.qid = q.id;
+      const optHTML = OPTIONS.map(o =>
+        `<button class="opt" data-val="${o.val}" onclick="selectOpt('${q.id}',${o.val},this)">
+          <span class="opt-n">${o.val}</span>${o.label.replace('\n','<br>')}
+        </button>`).join('');
+      card.innerHTML = `<div class="q-num-line"><span class="q-num">Q ${String(qIdx).padStart(2,'0')}</span><div class="q-num-bar"></div></div><p class="q-text">${q.text}</p><div class="opts">${optHTML}</div>`;
+      con.appendChild(card);
+    });
+  });
+}
+
+function selectOpt(qid, val, btn) {
+  const card = btn.closest('.q-card');
+  card.querySelectorAll('.opt').forEach(b => b.className = 'opt');
+  btn.classList.add(`sel-${val}`);
+  card.classList.add('answered');
+  answers[qid] = val;
+  updateProgress();
+}
+
+function checkForm() {
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = QUESTIONS.length;
+  const done = Object.keys(answers).length;
+  const pct = Math.round(done/total*100);
+  const circ = 2*Math.PI*20;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ - (circ*pct/100);
+  document.getElementById('ring-num').textContent = pct+'%';
+  document.getElementById('prog-bar').style.width = pct+'%';
+  const rem = total-done;
+  const hasInfo = document.getElementById('input-name').value.trim() && document.getElementById('input-dept').value.trim();
+  if (rem === 0 && hasInfo) {
+    document.getElementById('prog-title').textContent = '全問回答完了';
+    document.getElementById('prog-sub').textContent = '結果を確認してください';
+    document.getElementById('remaining-note').textContent = '準備完了です。ボタンを押してください。';
+    document.getElementById('submit-btn').disabled = false;
+  } else {
+    document.getElementById('prog-title').textContent = `${done} 問回答済み`;
+    document.getElementById('prog-sub').textContent = `残り ${rem} 問`;
+    document.getElementById('remaining-note').textContent =
+      !hasInfo ? '氏名と部署を入力してください' : `残り ${rem} 問あります`;
+    document.getElementById('submit-btn').disabled = true;
+  }
+}
+
+function calcScores() {
+  const s = {CP:0,NP:0,A:0,FC:0,AC:0};
+  QUESTIONS.forEach(q => { if(answers[q.id]!==undefined) s[q.scale]+=answers[q.id]; });
+  return s;
+}
+
+function getLevel(score) {
+  const p = score/MAX*100;
+  return p>=70?'high':p>=35?'mid':'low';
+}
+
+function getPattern(scores) {
+  const levels = {};
+  SCALE_ORDER.forEach(s => levels[s] = getLevel(scores[s]));
+  const sorted = SCALE_ORDER.slice().sort((a,b)=>scores[b]-scores[a]);
+  const top = sorted[0], bot = sorted[sorted.length-1];
+  if (levels.NP==='high'&&levels.A==='high'&&levels.CP!=='high') return {pattern:'支援・調整型',text:'思いやりと論理のバランスが優れています。チームメンバーを支えながら冷静な判断で問題を解決する力があります。相談役やマネジメントの役割に適しています。'};
+  if (levels.CP==='high'&&levels.A==='high') return {pattern:'推進・指導型',text:'強い責任感と高い論理力を持ち、組織のルールと成果を追求するリーダー型です。メンバーへの配慮も意識すると信頼がさらに高まります。'};
+  if (levels.FC==='high'&&levels.NP==='high') return {pattern:'創造・共感型',text:'自発性と思いやりが融合した、チームに活気と温かさをもたらすタイプです。目標設定と実行の計画性を加えるとさらに力を発揮できます。'};
+  if (levels.AC==='high'&&levels.NP==='high') return {pattern:'協調・献身型',text:'協調性と思いやりが非常に強く、チームの和を大切にします。自己主張や自分自身のケアも意識することが重要です。'};
+  if (levels.A==='high'&&levels.FC!=='high'&&levels.NP!=='high') return {pattern:'合理・分析型',text:'論理と分析を重視する客観性の高いタイプです。感情的なコミュニケーションや自発性の発揮を意識するとチームとの関係がより深まります。'};
+  if (levels.AC==='high'&&levels.FC==='low') return {pattern:'従順・抑制型',text:'周囲に合わせる力が強く摩擦を避けて行動します。定期的に自己表現の場を持つことがストレス軽減につながります。'};
+  return {pattern:`${SCALES[top].name}優位型`,text:`最も高い尺度は「${SCALES[top].name}（${top}）」です。最も低い「${SCALES[bot].name}（${bot}）」を意識的に補うことでバランスの取れた行動が可能になります。`};
+}
+
+async function submitResult() {
+  const name = document.getElementById('input-name').value.trim();
+  const dept = document.getElementById('input-dept').value.trim();
+  const scores = calcScores();
+  const {pattern} = getPattern(scores);
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  const record = {
+    name, dept, year: currentYear,
+    scores: {...scores},
+    pattern,
+    savedAt: new Date().toISOString(),
+    diagDate: dateStr
+  };
+  saveRecord(record);
+
+  showResult(name, dept, scores, true, dateStr);
+
+  // クラウド（Firestore）にも保存 → 管理ダッシュボードに自動反映
+  const sb = document.getElementById('save-banner');
+  try {
+    await writeToFirestore(record);
+    if (sb) sb.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 保存し、クラウドにも同期しました。管理ダッシュボードに自動で反映されます。`;
+  } catch (e) {
+    if (sb) {
+      sb.style.background = '#fef8ee'; sb.style.borderColor = '#e0c89b'; sb.style.color = '#9a6a1a';
+      sb.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> この端末には保存しました。ただしクラウド同期に失敗しました（${e.message}）。ネット接続・Firestoreのルールをご確認ください。`;
+    }
+  }
+}
+
+function showResult(name, dept, scores, saved=false, dateStr='') {
+  switchScreen('result');
+  document.getElementById('result-name').textContent = name;
+  const metaParts = [dept, `${currentYear}年度`];
+  if (dateStr) metaParts.push(`診断日：${dateStr}`);
+  document.getElementById('result-meta').textContent = metaParts.join('　／　');
+  document.getElementById('save-banner').style.display = saved ? 'flex' : 'none';
+
+  renderChart(scores, 'chart-bars');
+  renderTable(scores);
+  renderDetails(scores);
+
+  const {pattern, text} = getPattern(scores);
+  document.getElementById('summary-pattern').textContent = pattern;
+  document.getElementById('summary-text').textContent = text;
+  renderAdvice(scores);
+}
+
+function renderChart(scores, containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  SCALE_ORDER.forEach(scale => {
+    const s = SCALES[scale];
+    const score = scores[scale];
+    const pct = Math.round(score/MAX*100);
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <span class="bar-score" style="color:${s.hex}">${score}</span>
+      <span class="bar-pct">${pct}%</span>
+      <div class="bar-body" style="background:${s.hex};height:0%" data-pct="${pct}%"></div>
+      <div class="bar-lbl" style="color:${s.hex}">${s.label}</div>
+      <div class="bar-name">${s.name}</div>`;
+    el.appendChild(col);
+  });
+  setTimeout(()=>{ document.querySelectorAll(`#${containerId} .bar-body`).forEach(b=>{ b.style.height=b.dataset.pct; }); },100);
+}
+
+function renderTable(scores) {
+  const tbody = document.getElementById('score-table-body');
+  tbody.innerHTML = '';
+  SCALE_ORDER.forEach(scale => {
+    const s = SCALES[scale];
+    const score = scores[scale];
+    const pct = Math.round(score/MAX*100);
+    const level = getLevel(score);
+    const bClass = level==='high'?'badge-high':level==='mid'?'badge-mid':'badge-low';
+    const bLabel = level==='high'?'高':level==='mid'?'中':'低';
+    const row = document.createElement('div');
+    row.className = 'stc-row';
+    row.innerHTML = `
+      <div><span class="stc-name" style="color:${s.hex}">${s.label}：${s.name}</span>
+        <div class="stc-mini"><div class="stc-mini-fill" style="background:${s.hex};width:0%" data-w="${pct}%"></div></div></div>
+      <span class="stc-val" style="color:${s.hex}">${score}</span>
+      <span class="stc-max">${MAX}</span>
+      <span class="stc-pct">${pct}%</span>
+      <span class="badge ${bClass}">${bLabel}</span>`;
+    tbody.appendChild(row);
+  });
+  setTimeout(()=>{ document.querySelectorAll('.stc-mini-fill').forEach(b=>{ b.style.width=b.dataset.w; }); },200);
+}
+
+function renderDetails(scores) {
+  const el = document.getElementById('scale-details');
+  el.innerHTML = '';
+  SCALE_ORDER.forEach(scale => {
+    const s = SCALES[scale];
+    const score = scores[scale];
+    const pct = Math.round(score/MAX*100);
+    const level = getLevel(score);
+    const desc = level==='high'?s.desc_high:level==='mid'?s.desc_mid:s.desc_low;
+    const plus = level==='high'?s.plus_high:level==='mid'?s.plus_mid:s.plus_low;
+    const minus = level==='high'?s.minus_high:level==='mid'?s.minus_mid:s.minus_low;
+    const card = document.createElement('div');
+    card.className = 'card detail-card fade-up';
+    card.innerHTML = `
+      <div class="dc-stripe" style="background:${s.hex}"></div>
+      <div class="dc-body">
+        <div class="dc-header">
+          <div><div class="dc-title" style="color:${s.hex}">${s.label}：${s.name}</div><div class="dc-full">${s.full}</div></div>
+          <div><div class="dc-score" style="color:${s.hex}">${score}</div><div class="dc-score-sub">/ ${MAX}点（${pct}%）</div></div>
+        </div>
+        <div class="dc-bar-wrap"><div class="dc-bar-fill" style="background:${s.hex};width:0%" data-w="${pct}%"></div></div>
+        <p class="dc-comment">${desc}</p>
+        <div class="dc-tags">${plus.map(t=>`<span class="tag tag-plus">✓ ${t}</span>`).join('')}${minus.map(t=>`<span class="tag tag-minus">△ ${t}</span>`).join('')}</div>
+      </div>`;
+    el.appendChild(card);
+  });
+  setTimeout(()=>{ document.querySelectorAll('.dc-bar-fill').forEach(b=>{ b.style.width=b.dataset.w; }); },300);
+}
+
+function renderAdvice(scores) {
+  const el = document.getElementById('advice-items');
+  el.innerHTML = '';
+  const advices = [];
+  if(getLevel(scores.CP)==='high') advices.push('CPが高い傾向があります。人に要求する前に「相手はなぜそうしたか」を一度考える習慣をつけることで、チームとの関係が改善しやすくなります。');
+  if(getLevel(scores.CP)==='low') advices.push('CPが低い傾向があります。問題点や改善点を「相手のため」という観点で伝える練習が助けになります。');
+  if(getLevel(scores.NP)==='high') advices.push('NPが高い傾向があります。人の世話をしすぎて自分を後回しにしていないか、定期的に自己点検することをすすめます。');
+  if(getLevel(scores.A)==='low') advices.push('Aが低い傾向があります。「事実は何か」「データはどうか」を確認する習慣をつけると判断の精度が上がります。');
+  if(getLevel(scores.FC)==='low') advices.push('FCが低い傾向があります。日常の中に小さな楽しみや自己表現の場を意識的に設けることで、エネルギーを補充しやすくなります。');
+  if(getLevel(scores.AC)==='high') advices.push('ACが高い傾向があります。「No」と言える場面を意識的に増やし、自分の意見を一言添える練習をすることがストレス軽減につながります。');
+  if(advices.length===0) advices.push('全体的にバランスが取れています。現在の状態を維持しながら、状況に応じて各尺度を意識的に活用してください。');
+  advices.forEach(a => {
+    const item = document.createElement('div');
+    item.className = 'advice-item';
+    item.innerHTML = `<div class="advice-dot"></div><span>${a}</span>`;
+    el.appendChild(item);
+  });
+}
+
+function resetQuiz() {
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  document.getElementById('input-name').value = '';
+  document.getElementById('input-dept').value = '';
+  buildQuestions();
+  updateProgress();
+  switchScreen('quiz');
+}
+
+// ============================================================
+// 履歴画面
+// ============================================================
+function renderHistory() {
+  const records = loadRecords();
+  const q = (document.getElementById('history-search')?.value || '').trim().toLowerCase();
+  const el = document.getElementById('history-list');
+  el.innerHTML = '';
+
+  // 氏名のみでグループ化（部署は年度ごとに記録）
+  const groups = {};
+  records.forEach(r => {
+    const key = r.name;
+    if (!groups[key]) groups[key] = {name:r.name, records:[]};
+    groups[key].records.push(r);
+  });
+
+  let list = Object.values(groups).filter(g =>
+    !q || g.name.toLowerCase().includes(q) || g.records.some(r => r.dept.toLowerCase().includes(q))
+  );
+
+  if (list.length === 0) {
+    el.innerHTML = '<div class="history-empty">データがありません。<br>診断を実施するとここに記録されます。</div>';
+    return;
+  }
+
+  list.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  list.forEach(g => {
+    g.records.sort((a,b)=>a.year-b.year);
+    const latestRecord = g.records[g.records.length-1];
+    const latestScores = latestRecord.scores;
+    const card = document.createElement('div');
+    card.className = 'card person-card fade-up';
+
+    const miniHTML = SCALE_ORDER.map(scale => {
+      const s = SCALES[scale];
+      const score = latestScores[scale];
+      const h = Math.round(score/MAX*36);
+      return `<div class="mini-scale">
+        <div class="mini-bar" style="background:${s.hex};height:${h}px"></div>
+        <span class="mini-lbl" style="color:${s.hex}">${s.label}</span>
+      </div>`;
+    }).join('');
+
+    const yearTags = g.records.map(r => `<span class="year-tag">${r.year}年</span>`).join('');
+
+    card.innerHTML = `
+      <div class="person-card-header">
+        <div class="person-info">
+          <h3>${g.name}</h3>
+          <p>最新所属：${latestRecord.dept}</p>
+        </div>
+        <div class="person-years">${yearTags}</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;">
+        <div class="mini-bars">${miniHTML}</div>
+        <span style="font-size:11px;color:var(--text-muted);">最新（${latestRecord.year}年）</span>
+      </div>`;
+    card.onclick = () => openPersonModal(g);
+    el.appendChild(card);
+  });
+}
+
+// ============================================================
+// 個人詳細モーダル
+// ============================================================
+function openPersonModal(g) {
+  const overlay = document.getElementById('modal-overlay');
+  document.getElementById('modal-title').textContent = g.name;
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = '';
+
+  const years = g.records.map(r=>r.year);
+
+  // 年度タブ
+  const tabWrap = document.createElement('div');
+  tabWrap.className = 'year-tabs';
+  years.forEach((y,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'year-tab' + (i===years.length-1?' active':'');
+    btn.textContent = y+'年度';
+    btn.onclick = () => {
+      tabWrap.querySelectorAll('.year-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderModalYear(g.records[i], body, tabWrap, g.records);
+    };
+    tabWrap.appendChild(btn);
+  });
+  body.appendChild(tabWrap);
+
+  // 年度比較グラフ（複数年がある場合）
+  if (g.records.length >= 2) {
+    const compareWrap = document.createElement('div');
+    compareWrap.className = 'compare-wrap';
+    compareWrap.innerHTML = `<p class="compare-title">年度別比較</p>`;
+
+    const barsDiv = document.createElement('div');
+    barsDiv.className = 'compare-bars';
+
+    const colors = ['#3a7fe0','#e09b3a','#3aad6e','#e05c5c','#9b5ce0','#888'];
+
+    SCALE_ORDER.forEach(scale => {
+      const s = SCALES[scale];
+      const scaleDiv = document.createElement('div');
+      scaleDiv.className = 'compare-scale';
+      scaleDiv.innerHTML = `<div class="compare-scale-name" style="color:${s.hex}">${s.label}</div>`;
+      const barGroup = document.createElement('div');
+      barGroup.className = 'compare-bar-group';
+      g.records.forEach((r,i) => {
+        const score = r.scores[scale];
+        const h = Math.round(score/MAX*70);
+        const bar = document.createElement('div');
+        bar.className = 'compare-bar';
+        bar.style.cssText = `background:${colors[i%colors.length]};height:0%;opacity:0.85;`;
+        bar.dataset.h = h+'px';
+        bar.innerHTML = `<span class="compare-bar-tip" style="color:${colors[i%colors.length]}">${score}</span>`;
+        barGroup.appendChild(bar);
+      });
+      scaleDiv.appendChild(barGroup);
+      barsDiv.appendChild(scaleDiv);
+    });
+
+    compareWrap.appendChild(barsDiv);
+
+    const legend = document.createElement('div');
+    legend.className = 'compare-legend';
+    g.records.forEach((r,i) => {
+      const item = document.createElement('div');
+      item.className = 'compare-legend-item';
+      item.innerHTML = `<div class="compare-legend-dot" style="background:${colors[i%colors.length]}"></div>${r.year}年度`;
+      legend.appendChild(item);
+    });
+    compareWrap.appendChild(legend);
+    body.appendChild(compareWrap);
+
+    setTimeout(()=>{
+      body.querySelectorAll('.compare-bar').forEach(b=>{ b.style.height=b.dataset.h; });
+    },100);
+  }
+
+  // 最新年度の詳細
+  const latest = g.records[g.records.length-1];
+  renderModalYearDetail(latest, body);
+
+  overlay.classList.add('open');
+}
+
+function renderModalYear(record, body, tabWrap, allRecords) {
+  const existingDetail = body.querySelector('.modal-year-detail');
+  if (existingDetail) existingDetail.remove();
+  renderModalYearDetail(record, body);
+}
+
+function renderModalYearDetail(record, body) {
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-year-detail';
+
+  const hr = document.createElement('hr');
+  hr.style.cssText = 'border:none;border-top:1px solid var(--border);margin:16px 0;';
+  wrap.appendChild(hr);
+
+  const title = document.createElement('p');
+  title.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:12px;';
+  title.textContent = `${record.year}年度のスコア（所属：${record.dept}　診断日：${record.diagDate||''}）`;
+  wrap.appendChild(title);
+
+  SCALE_ORDER.forEach(scale => {
+    const s = SCALES[scale];
+    const score = record.scores[scale];
+    const pct = Math.round(score/MAX*100);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:8px;';
+    row.innerHTML = `
+      <span style="font-size:12px;font-weight:600;color:${s.hex};width:28px">${s.label}</span>
+      <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;background:${s.hex};border-radius:3px;width:0%;transition:width 0.8s ease;" data-w="${pct}%"></div>
+      </div>
+      <span style="font-size:13px;font-weight:600;color:${s.hex};width:36px;text-align:right">${score}</span>
+      <span style="font-size:11px;color:var(--text-muted);width:30px">${pct}%</span>`;
+    wrap.appendChild(row);
+  });
+
+  const pat = document.createElement('p');
+  pat.style.cssText = 'font-size:12px;color:var(--text-sub);margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:8px;';
+  pat.textContent = `パターン：${record.pattern}`;
+  wrap.appendChild(pat);
+
+  body.appendChild(wrap);
+  setTimeout(()=>{ wrap.querySelectorAll('[data-w]').forEach(b=>{ b.style.width=b.dataset.w; }); },80);
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+// ============================================================
+// 管理画面
+// ============================================================
+let adminLoggedIn = false;
+
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PW) {
+    adminLoggedIn = true;
+    document.getElementById('admin-login-wrap').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    renderAdminPanel();
+  } else {
+    document.getElementById('admin-error').style.display = 'block';
+  }
+}
+
+function renderAdminPanel() {
+  if (!adminLoggedIn) return;
+  const records = loadRecords();
+
+  // 統計
+  const years = [...new Set(records.map(r=>r.year))].sort();
+  const statsEl = document.getElementById('admin-stats');
+  statsEl.innerHTML = '';
+  const totalPeople = new Set(records.map(r=>r.name)).size;
+  const avgScores = {};
+  SCALE_ORDER.forEach(s => { avgScores[s] = records.length ? Math.round(records.reduce((a,r)=>a+r.scores[s],0)/records.length*10)/10 : 0; });
+  const statItems = [
+    {label:'総記録数',val:records.length,hex:'#1a1916'},
+    ...SCALE_ORDER.map(s=>({label:SCALES[s].label+' 平均',val:avgScores[s],hex:SCALES[s].hex})),
+  ];
+  statItems.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card stat-card';
+    card.innerHTML = `<div class="stat-val" style="color:${item.hex}">${item.val}</div><div class="stat-lbl">${item.label}</div>`;
+    statsEl.appendChild(card);
+  });
+
+  // 年度フィルター更新
+  const yearSel = document.getElementById('admin-year-filter');
+  const currentVal = yearSel.value;
+  yearSel.innerHTML = '<option value="">全年度</option>';
+  years.forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y+'年度';
+    if (String(y)===currentVal) opt.selected = true;
+    yearSel.appendChild(opt);
+  });
+
+  renderAdminTable();
+}
+
+function renderAdminTable() {
+  if (!adminLoggedIn) return;
+  const records = loadRecords();
+  const q = (document.getElementById('admin-search')?.value||'').trim().toLowerCase();
+  const yr = document.getElementById('admin-year-filter')?.value||'';
+
+  let filtered = records.filter(r => {
+    const matchQ = !q || r.name.toLowerCase().includes(q) || r.dept.toLowerCase().includes(q);
+    const matchY = !yr || String(r.year)===yr;
+    return matchQ && matchY;
+  }).sort((a,b)=>{
+    if (a.name!==b.name) return a.name.localeCompare(b.name,'ja');
+    return a.year-b.year;
+  });
+
+  const tbody = document.getElementById('admin-table-body');
+  tbody.innerHTML = '';
+
+  if (filtered.length===0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text-muted);">該当データがありません</td></tr>';
+    return;
+  }
+
+  filtered.forEach(r => {
+    const tr = document.createElement('tr');
+    const scoresCells = SCALE_ORDER.map(scale => {
+      const score = r.scores[scale];
+      const s = SCALES[scale];
+      return `<td><span class="score-pill" style="background:${s.bg};color:${s.hex}">${score}</span></td>`;
+    }).join('');
+    tr.innerHTML = `
+      <td class="td-name">${r.name}</td>
+      <td>${r.dept}</td>
+      <td>${r.year}年</td>
+      ${scoresCells}
+      <td style="font-size:11px;color:var(--text-sub)">${r.pattern}</td>
+      <td><button class="btn-danger" onclick="confirmDelete('${r.name}',${r.year})">削除</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function confirmDelete(name, year) {
+  if (confirm(`${name} の${year}年度データを削除しますか？`)) {
+    deleteRecord(name, year);
+    renderAdminPanel();
+  }
+}
+
+function clearAllData() {
+  if (confirm('全職員のデータをすべて削除しますか？この操作は取り消せません。')) {
+    localStorage.removeItem(STORAGE_KEY);
+    renderAdminPanel();
+  }
+}
+
+function downloadCSV() {
+  const records = loadRecords();
+  const q = (document.getElementById('admin-search')?.value||'').trim().toLowerCase();
+  const yr = document.getElementById('admin-year-filter')?.value||'';
+  const filtered = records.filter(r => {
+    const matchQ = !q || r.name.toLowerCase().includes(q) || r.dept.toLowerCase().includes(q);
+    const matchY = !yr || String(r.year)===yr;
+    return matchQ && matchY;
+  }).sort((a,b)=>a.name.localeCompare(b.name,'ja')||a.year-b.year);
+
+  const header = ['氏名','部署','年度','診断日','CP','NP','A','FC','AC','パターン','保存日時'];
+  const rows = filtered.map(r => [
+    r.name, r.dept, r.year,
+    r.diagDate||'',
+    r.scores.CP, r.scores.NP, r.scores.A, r.scores.FC, r.scores.AC,
+    r.pattern, r.savedAt ? new Date(r.savedAt).toLocaleString('ja-JP') : ''
+  ]);
+
+  const csv = [header,...rows].map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `egogram_${yr||'全年度'}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+buildQuestions();
+updateProgress();
+</script>
+</body>
+</html>
