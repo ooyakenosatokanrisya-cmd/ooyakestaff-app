@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>介護職員 トータルケア・ダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f1ea;--panel:#fffdf8;--ink:#2b2a28;--ink-soft:#6b675f;--line:#e3ddd0;
+    --accent:#3f6b5f;--accent-soft:#e8efe9;
+    --green:#4a8c6a;--yellow:#d6a93a;--orange:#dd8341;--red:#c0533f;
+    --green-bg:#e9f2ec;--yellow-bg:#faf2da;--orange-bg:#f9e8da;--red-bg:#f7e3de;
+    --staff:#5a6e9c;--staff-soft:#e8ecf5;--plum:#8a5a76;
+    --shadow:0 1px 2px rgba(43,42,40,.04),0 8px 24px rgba(43,42,40,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;
+    background-image:radial-gradient(circle at 1px 1px,rgba(63,107,95,.05) 1px,transparent 0);background-size:22px 22px;}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 80px}
+  h1{font-family:"Noto Serif JP",serif;font-size:22px;font-weight:700;letter-spacing:.02em}
+  h1 .sub{display:block;font-family:"Noto Sans JP";font-size:11px;font-weight:500;color:var(--ink-soft);letter-spacing:.06em;margin-top:2px}
+  .rolebar{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);margin:14px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .roleswitch{display:flex;background:var(--bg);border-radius:10px;padding:3px;border:1px solid var(--line)}
+  .roleswitch button{font-family:inherit;font-size:13px;font-weight:600;padding:7px 16px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--ink-soft);transition:.15s}
+  .roleswitch button.on[data-r="mgr"]{background:var(--accent);color:#fff}
+  .roleswitch button.on[data-r="staff"]{background:var(--staff);color:#fff}
+  .rolebar select{font-family:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+  .rolebar .who{font-size:12px;color:var(--ink-soft);margin-left:auto}
+  .demo-note{font-size:11px;color:var(--ink-soft);width:100%;border-top:1px dashed var(--line);padding-top:8px}
+  .demo-note b{color:var(--accent)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin:14px 0 6px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;box-shadow:var(--shadow)}
+  .kpi .n{font-family:"Noto Serif JP",serif;font-size:24px;font-weight:700;line-height:1}
+  .kpi .l{font-size:11px;color:var(--ink-soft);margin-top:5px}
+  .kpi.red .n{color:var(--red)}.kpi.orange .n{color:var(--orange)}.kpi.yellow .n{color:var(--yellow)}
+  .tabs{display:flex;gap:4px;margin:18px 0 12px;flex-wrap:wrap}
+  .tab{font-size:13px;font-weight:500;padding:8px 15px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);cursor:pointer;transition:.15s}
+  .tab:hover{border-color:var(--accent)} .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  body.staffmode .tab.active{background:var(--staff);border-color:var(--staff)} body.staffmode .tab:hover{border-color:var(--staff)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .hint{font-size:12px;color:var(--ink-soft);max-width:660px}
+  .btn{font-family:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:9px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;transition:.15s}
+  .btn:hover{filter:brightness(1.07)}.btn.ghost{background:transparent;color:var(--accent)}
+  body.staffmode .btn{background:var(--staff);border-color:var(--staff)} body.staffmode .btn.ghost{background:transparent;color:var(--staff)}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .grid{display:grid;grid-template-columns:1fr;gap:11px}
+  .card{background:var(--panel);border:1px solid var(--line);border-left-width:5px;border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;transition:.15s}
+  .card:hover{transform:translateY(-1px)}
+  .card.lv-red{border-left-color:var(--red)}.card.lv-orange{border-left-color:var(--orange)}
+  .card.lv-yellow{border-left-color:var(--yellow)}.card.lv-green{border-left-color:var(--green)}
+  .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .name{font-size:16px;font-weight:700}
+  .role{font-size:11px;color:var(--ink-soft);background:var(--bg);padding:2px 8px;border-radius:6px}
+  .badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-left:auto}
+  .badge.red{background:var(--red-bg);color:var(--red)}.badge.orange{background:var(--orange-bg);color:var(--orange)}
+  .badge.yellow{background:var(--yellow-bg);color:#9c7916}.badge.green{background:var(--green-bg);color:var(--green)}
+  .badge.plan{background:#efe4ec;color:var(--plum)}
+  .flags{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px}
+  .flag{font-size:11px;padding:3px 9px;border-radius:7px;background:var(--bg);border:1px solid var(--line);color:var(--ink-soft)}
+  .flag.s{color:var(--orange);border-color:#eccfb8}.flag.o{color:var(--accent);border-color:#cfe0d6}.flag.p{color:var(--red);border-color:#eccac2}
+  .mini-axes{margin-top:10px;display:flex;gap:18px;flex-wrap:wrap;font-size:11px;color:var(--ink-soft)}
+  .mini-axes .ax b{color:var(--ink);font-weight:700}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+  .panel h2{font-family:"Noto Serif JP",serif;font-size:17px;margin-bottom:4px}
+  .panel .lead{font-size:12px;color:var(--ink-soft);margin-bottom:14px}
+  .check-scale{margin:12px 0}.check-scale>label{font-size:13px;font-weight:600;display:block;margin-bottom:6px}
+  .scale{display:flex;gap:6px}
+  .scale button{flex:1;font-family:inherit;font-size:13px;padding:11px 0;border:1px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;color:var(--ink-soft);transition:.12s}
+  .scale button:hover{border-color:var(--staff)} .scale button.on{background:var(--staff);color:#fff;border-color:var(--staff);transform:scale(1.04)}
+  .scale .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-soft);margin-top:4px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{font-family:inherit;font-size:12px;padding:8px 13px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--ink-soft)}
+  .seg button.on{background:var(--staff);color:#fff;border-color:var(--staff)}
+  .selfmsg{border-radius:12px;padding:14px 16px;font-size:13px;margin-bottom:14px}
+  .selfmsg.calm{background:var(--green-bg);color:#2f6347}.selfmsg.care{background:var(--yellow-bg);color:#80651a}.selfmsg.rest{background:var(--orange-bg);color:#9a5320}
+  .selfmsg b{display:block;font-size:14px;margin-bottom:3px}
+  .log-list{margin-top:6px}
+  .log-row{display:flex;align-items:center;gap:10px;font-size:12px;padding:8px 0;border-bottom:1px solid var(--line);color:var(--ink-soft)}
+  .log-row .d{font-weight:600;color:var(--ink);min-width:96px}
+  .log-row .v{display:flex;gap:10px;flex-wrap:wrap}
+  .spark{margin:8px 0}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:80;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .readonly-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px}
+  .ro{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ro .l{font-size:11px;color:var(--ink-soft)} .ro .v{font-size:15px;font-weight:700;margin-top:2px}
+  /* anchor bars */
+  .anchor-row{display:flex;align-items:center;gap:8px;font-size:12px;margin:5px 0}
+  .anchor-row .nm{min-width:108px;color:var(--ink-soft)} .anchor-row.top .nm{color:var(--accent);font-weight:700}
+  .abar{flex:1;height:9px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+  .abar>i{display:block;height:100%;background:var(--accent)} .anchor-row.top .abar>i{background:var(--plum)}
+  .anchor-row .val{min-width:26px;text-align:right;font-weight:700}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(43,42,40,.45);display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto;z-index:50}
+  .overlay.open{display:flex}
+  .modal{background:var(--panel);border-radius:16px;max-width:700px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;margin:auto}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .modal-head .x{margin-left:auto;font-size:22px;color:var(--ink-soft);background:none;border:none;cursor:pointer;line-height:1}
+  .modal-body{padding:6px 20px 20px;max-height:74vh;overflow-y:auto}
+  .sec{margin-top:16px}
+  .sec h3{font-size:13px;font-weight:700;color:var(--accent);padding-bottom:6px;margin-bottom:10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .sec h3 .tag{margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+  .tag.mgr{background:var(--accent-soft);color:var(--accent)} .tag.self{background:var(--staff-soft);color:var(--staff)} .tag.plum{background:#efe4ec;color:var(--plum)}
+  .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px}
+  .field{display:flex;flex-direction:column;gap:3px}
+  .field label{font-size:11px;color:var(--ink-soft);font-weight:500}
+  .field input,.field select,.field textarea{font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+  .field.full{grid-column:1/-1}
+  .num5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .num8{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+  .masked{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--ink-soft)}
+  .masked b{color:var(--accent)}
+  .hintbox{background:#f3ece1;border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:12px;margin-bottom:10px}
+  .hintbox .t{font-weight:700;color:var(--plum);margin-bottom:5px}
+  .hintbox ul{padding-left:17px;margin:0} .hintbox li{margin-bottom:3px}
+  .modal-foot{padding:13px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+  .alert-box{border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:4px}
+  .alert-box .t{font-weight:700;margin-bottom:3px}
+  .alert-box.red{background:var(--red-bg);color:#8e3326}.alert-box.orange{background:var(--orange-bg);color:#9a5320}.alert-box.yellow{background:var(--yellow-bg);color:#80651a}.alert-box.green{background:var(--green-bg);color:#2f6347}
+  .del{color:var(--red);background:none;border:none;font-size:12px;cursor:pointer;margin-right:auto}
+  .empty{text-align:center;color:var(--ink-soft);padding:50px 20px;font-size:14px}
+  .note-row{display:flex;gap:8px;align-items:flex-start;font-size:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .note-row .nd{color:var(--ink-soft);min-width:84px}
+  .proposal{background:var(--accent-soft);border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:13px}
+  .proposal h3{font-family:"Noto Serif JP",serif;font-size:16px;margin-bottom:10px;color:var(--accent)}
+  .proposal ul{padding-left:18px}.proposal li{margin-bottom:7px}.proposal li b{color:var(--accent)}
+  .egogram{margin:6px 0}
+  footer{margin-top:28px;font-size:11px;color:var(--ink-soft);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>介護職員 トータルケア・ダッシュボード
+    <span class="sub">キャリア ・ ヘルス ・ 休日勤務 ／ 個別支援計画で統合ケア</span></h1>
+
+  <div class="rolebar">
+    <div class="roleswitch" id="roleswitch"><button data-r="mgr" class="on">🔒 管理者</button><button data-r="staff">👤 職員</button></div>
+    <select id="staffPicker" style="display:none"></select>
+    <span class="who" id="whoLabel"></span>
+    <div class="demo-note">⚠️ このモード切替は<b>設計デモ用</b>で本物の認証ではありません。実運用では端末分離・ログイン等の正式なアクセス制御が別途必要です。データは端末内のみに保存され、人事評価には使用しません。</div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="toolbar"><span class="hint" id="viewHint"></span><span style="display:flex;gap:8px"><button class="btn ghost" id="syncBtn" style="display:none">☁ 体調を同期</button><button class="btn ghost" id="importBtn" style="display:none">⬆ 診断データ取込</button><button class="btn" id="addBtn" style="display:none">＋ 職員を追加</button></span></div>
+  <div id="content"></div>
+  <footer>キャリア・心身・勤務を一人ひとりの個別支援計画へ。早期発見は支援のため。</footer>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='kaigo-staff-care-v3';
+let staff=[], role='mgr', view='dashboard', currentStaffId=null, editId=null;
+
+const ANCHORS=[['tf','専門・職能別'],['gm','全般管理'],['au','自律・独立'],['se','保障・安定'],['ec','起業家的創造性'],['sv','奉仕・社会貢献'],['ch','純粋な挑戦'],['ls','生活様式']];
+const EGO=[['cp','CP 批判的な親'],['np','NP 養育的な親'],['a','A 大人'],['fc','FC 自由な子ども'],['ac','AC 順応した子ども']];
+
+const blank=()=>({
+  id:'s'+Date.now()+Math.floor(Math.random()*999),
+  name:'',role:'介護職員',hireDate:'',
+  career:{trainings:'', assessments:[]},   // assessments: 半年に1回 {date,year,anchor:{...8},ego:{...5}}
+  healthLog:[], checkups:[], loadMemo:'', // healthLog: {ts,cond,mood,sleep,back,wrist,note}
+  work:{consecWork:0,consecOff:0,night:0,nightBase:4,overtime:0,paidLeaveMonths:0,absence:0},
+  incident:{now:0,base:1},
+  mgrNotes:[],
+  plan:{assessment:'',needs:'',goalShort:'',goalLong:'',actions:'',owner:'',reviewDate:'',agreedDate:'',updated:''}
+});
+const latest=s=>s.healthLog[0]||{cond:3,mood:3,sleep:3,back:0,wrist:0,note:'',ts:''};
+const lastAssess=s=>s.career.assessments[s.career.assessments.length-1]||null;
+
+async function load(){try{const r=await window.storage.get(KEY);if(r&&r.value){staff=JSON.parse(r.value);return;}}catch(e){}staff=[];}
+async function save(){try{await window.storage.set(KEY,JSON.stringify(staff));}catch(e){console.warn(e);}}
+
+/* ---- alert ---- 体調・気持ち・睡眠（別アプリの体調チェックと同一項目） */
+function evaluate(s){
+  const S=[],O=[],P=[];const h=latest(s),w=s.work,i=s.incident;
+  if(h.cond<=2)S.push('体調の低下');if(h.mood<=2)S.push('気持ちの低下');if(h.sleep<=2)S.push('睡眠の悪化');
+  if(w.overtime>=45)O.push('残業45h超');else if(w.overtime>=35)O.push('残業増加');
+  if(w.night>=w.nightBase+2)O.push('夜勤過多');if(w.consecWork>=6)O.push('連続勤務6日超');
+  if(w.paidLeaveMonths>=3)O.push('有給未取得3ヶ月');if(w.absence>=2)O.push('欠勤・遅刻増');
+  if(i.base>0&&i.now>=i.base*2)O.push('インシデント急増');if(i.now===0&&i.base>=2)O.push('報告ゼロ(抱え込み懸念)');
+  if(h.back>=2)P.push('腰痛(中等度以上)');if(h.wrist>=2)P.push('手首腱鞘炎(中等度以上)');
+  const severe=h.cond<=1||h.mood<=1||h.sleep<=1;const total=S.length+O.length+P.length;
+  let lv;if((S.length>=1&&O.length>=1&&severe)||total>=4)lv='red';else if((S.length>=1&&O.length>=1)||O.length>=2)lv='orange';else if(total>=1)lv='yellow';else lv='green';
+  const risk=Math.min(100,S.length*16+O.length*11+P.length*9+(severe?14:0));
+  return{S,O,P,lv,risk,severe};
+}
+const LV={green:{t:'良好',cls:'green'},yellow:{t:'注意',cls:'yellow'},orange:{t:'要フォロー',cls:'orange'},red:{t:'優先対応',cls:'red'}};
+const order={red:0,orange:1,yellow:2,green:3};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+function topAnchor(a){if(!a)return null;let best=null,bv=-1;ANCHORS.forEach(([k,l])=>{if((a.anchor[k]||0)>bv){bv=a.anchor[k]||0;best=[k,l,bv];}});return best;}
+function topEgo(a){if(!a)return null;let best=null,bv=-1;EGO.forEach(([k,l])=>{if((a.ego[k]||0)>bv){bv=a.ego[k]||0;best=[k,l,bv];}});return best;}
+
+/* ---- support plan hints ---- */
+function planHints(s){
+  const e=evaluate(s),h=[];
+  if(e.O.some(f=>/残業|夜勤|連続勤務/.test(f)))h.push('勤務負荷が高め：シフト・夜勤回数・連続勤務の調整を検討');
+  if(e.O.includes('有給未取得3ヶ月'))h.push('休息不足：計画的な有給・連休取得の後押しを');
+  if(e.P.length)h.push('身体負荷あり：介助方法の見直し・福祉用具・通院配慮を検討');
+  if(e.S.length)h.push('心身のサイン：傾聴の面談と相談窓口の案内を（詳細は本人と対話で）');
+  if(e.O.some(f=>/インシデント|報告ゼロ/.test(f)))h.push('業務遂行面の変化：振り返りとサポート体制の確認を');
+  const ta=topAnchor(lastAssess(s));
+  const amap={tf:'専門研修・得意分野を活かす担当でやりがいを',gm:'リーダー・育成役など管理志向に沿う機会を',au:'裁量の大きい業務・自己完結できる役割を',se:'キャリアパスの明確化と安心材料の提示を',ec:'新しい取り組み・改善提案の場を',sv:'理念に沿う・人の役に立つ実感のある担当を',ch:'難度の高い課題・成長実感のある目標を',ls:'勤務時間・働き方の柔軟性に配慮を'};
+  if(ta&&ta[2]>0)h.push(`キャリアアンカー「${ta[1]}」が高め：${amap[ta[0]]}`);
+  const te=topEgo(lastAssess(s));
+  const emap={cp:'責任感が強い傾向。抱え込みすぎに注意し役割分担を',np:'面倒見が良い傾向。燃え尽きに注意し自分のケアも促す',a:'冷静・論理的な傾向。データに基づく対話が有効',fc:'のびのびした強みを活かす配置・自由度を',ac:'自己主張しづらい傾向かも。安心して相談できる関係づくりを'};
+  if(te&&te[2]>0)h.push(`エゴグラムは「${te[1]}」が高め：${emap[te[0]]}（あくまで傾向）`);
+  return h;
+}
+
+/* ---- tabs ---- */
+const MGR_TABS=[['dashboard','📊 ダッシュボード'],['career','🧭 キャリア'],['work','📅 休日・勤務'],['plan','📝 個別支援計画'],['proposal','💡 設計メモ']];
+const STAFF_TABS=[['myhealth','🩺 マイヘルス（随時入力）'],['mycareer','🧭 自分のキャリア'],['mywork','📅 自分の勤務']];
+function setupTabs(){
+  const tabs=role==='mgr'?MGR_TABS:STAFF_TABS;if(!tabs.find(t=>t[0]===view))view=tabs[0][0];
+  $('tabs').innerHTML=tabs.map(([v,l])=>`<button class="tab ${v===view?'active':''}" data-view="${v}">${l}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{view=t.dataset.view;setupTabs();render();});
+}
+function setRole(r){
+  role=r;document.body.classList.toggle('staffmode',r==='staff');
+  document.querySelectorAll('#roleswitch button').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+  const picker=$('staffPicker');
+  if(r==='staff'){picker.style.display='';picker.innerHTML=staff.map(s=>`<option value="${s.id}">${esc(s.name||'(無名)')}</option>`).join('');
+    if(!currentStaffId||!staff.find(s=>s.id===currentStaffId))currentStaffId=staff[0]&&staff[0].id;picker.value=currentStaffId;
+    $('whoLabel').textContent='自分の記録のみ閲覧できます';}
+  else{picker.style.display='none';$('whoLabel').textContent='全職員の支援シグナルを閲覧できます';}
+  setupTabs();render();
+}
+
+/* ---- render ---- */
+function render(){
+  const mgr=role==='mgr';
+  $('kpis').style.display=mgr&&view==='dashboard'?'grid':'none';
+  $('addBtn').style.display=mgr&&view==='dashboard'?'':'none';
+  $('importBtn').style.display=mgr&&(view==='dashboard'||view==='career')?'':'none';
+  $('syncBtn').style.display=mgr&&view==='dashboard'?'':'none';
+  if(mgr&&view==='dashboard')renderKPI();
+  const hints={dashboard:'アラートの重い順に並びます。心身の生データは含まず、支援シグナルのみ。カードで詳細・対応記録へ。',
+    career:'研修項目・キャリアアンカー(8分類)・エゴグラム(5尺度)。アンカーとエゴグラムは半年に1回、履歴で推移を追えます。CSV取込で別アプリの診断結果を反映できます。',
+    work:'連休・連続勤務・夜勤・残業・有給。過負荷を勤務面から検出。',
+    plan:'3軸とキャリアを統合した個別支援計画。検討材料(ヒント)を見ながら、目標と支援内容を立案します。',proposal:'',
+    myhealth:'今日の体調を約30秒で記録。体調・気持ち・睡眠をタップ、腰・手首を選ぶだけ。',
+    mycareer:'自分のキャリアアンカー・エゴグラム・研修項目です。',mywork:'自分の勤務状況です。'};
+  $('viewHint').textContent=hints[view]||'';
+  const el=$('content');
+  if(view==='proposal'){el.innerHTML=proposalHTML();return;}
+  if(role==='staff'){el.innerHTML=staffView();bindStaff();return;}
+  if(staff.length===0){el.innerHTML='<div class="empty">職員が未登録です。「＋職員を追加」から開始。</div>';return;}
+  const rows=staff.map(s=>({s,e:evaluate(s)})).sort((a,b)=>order[a.e.lv]-order[b.e.lv]||b.e.risk-a.e.risk);
+  el.innerHTML='<div class="grid">'+rows.map(({s,e})=>mgrCard(s,e)).join('')+'</div>';
+  document.querySelectorAll('.card').forEach(c=>c.onclick=()=>openMgrModal(c.dataset.id));
+}
+function renderKPI(){const ev=staff.map(evaluate);const c=l=>ev.filter(e=>e.lv===l).length;
+  $('kpis').innerHTML=`<div class="kpi"><div class="n">${staff.length}</div><div class="l">登録職員数</div></div>
+    <div class="kpi red"><div class="n">${c('red')}</div><div class="l">優先対応(赤)</div></div>
+    <div class="kpi orange"><div class="n">${c('orange')}</div><div class="l">要フォロー(橙)</div></div>
+    <div class="kpi yellow"><div class="n">${c('yellow')}</div><div class="l">注意(黄)</div></div>
+    <div class="kpi"><div class="n">${c('green')}</div><div class="l">良好(緑)</div></div>`;}
+function mgrCard(s,e){
+  let body='';
+  if(view==='dashboard'){
+    const flags=[...e.S.map(f=>`<span class="flag s">${f}</span>`),...e.O.map(f=>`<span class="flag o">${f}</span>`),...e.P.map(f=>`<span class="flag p">${f}</span>`)].join('');
+    const upd=latest(s).ts?('最終チェック '+latest(s).ts.slice(0,10)):'本人チェック未記録';
+    body=`<div class="flags">${flags||'<span class="flag">特記なし</span>'}</div><div class="mini-axes"><span class="ax">総合リスク <b>${e.risk}</b>/100</span><span class="ax">${upd}</span></div>`;
+  }else if(view==='career'){
+    const a=lastAssess(s),ta=topAnchor(a),te=topEgo(a);
+    body=`<div class="mini-axes"><span class="ax">研修 <b>${s.career.trainings?s.career.trainings.split(/[、,\n]/).filter(Boolean).length:0}項目</b></span>
+      <span class="ax">アンカー <b>${ta?ta[1]:'未測定'}</b></span><span class="ax">エゴ最大 <b>${te?te[1].split(' ')[0]:'未測定'}</b></span>
+      <span class="ax">${a?('測定 '+a.date):'半年測定なし'}</span></div>`;
+  }else if(view==='work'){
+    body=`<div class="mini-axes"><span class="ax">連休 <b>${s.work.consecOff}日</b></span><span class="ax">連続勤務 <b>${s.work.consecWork}日</b></span>
+      <span class="ax">夜勤 <b>${s.work.night}回</b></span><span class="ax">残業 <b>${s.work.overtime}h</b></span><span class="ax">有給未取得 <b>${s.work.paidLeaveMonths}ヶ月</b></span></div>`;
+  }else if(view==='plan'){
+    const p=s.plan,has=p.updated;
+    body=`<div class="mini-axes"><span class="ax">${has?('更新 '+p.updated):'未作成'}</span>${p.goalShort?`<span class="ax">短期目標 <b>${esc(p.goalShort.slice(0,24))}</b></span>`:''}${p.reviewDate?`<span class="ax">見直し ${p.reviewDate}</span>`:''}</div>`;
+  }
+  const planBadge=(view==='plan')?`<span class="badge plan">${s.plan.updated?'計画あり':'未作成'}</span>`:`<span class="badge ${LV[e.lv].cls}">${LV[e.lv].t}</span>`;
+  return `<div class="card lv-${e.lv}" data-id="${s.id}"><div class="card-head"><span class="name">${esc(s.name||'(無名)')}</span><span class="role">${esc(s.role)}</span>${planBadge}</div>${body}</div>`;
+}
+
+/* ---- anchor/ego rendering ---- */
+function anchorBars(a){if(!a)return '<p class="hint">半年ごとの測定値が未登録です。</p>';
+  const max=Math.max(1,...ANCHORS.map(([k])=>a.anchor[k]||0));const ta=topAnchor(a);
+  return ANCHORS.map(([k,l])=>`<div class="anchor-row ${ta&&ta[0]===k?'top':''}"><span class="nm">${l}</span><span class="abar"><i style="width:${(a.anchor[k]||0)/max*100}%"></i></span><span class="val">${a.anchor[k]||0}</span></div>`).join('');
+}
+function egogramSVG(a,prev){
+  if(!a)return '<p class="hint">半年ごとの測定値が未登録です。</p>';
+  const w=320,h=120,pad=18,n=EGO.length,max=Math.max(20,...EGO.map(([k])=>a.ego[k]||0),...(prev?EGO.map(([k])=>prev.ego[k]||0):[0]));
+  const x=i=>pad+ (i*(w-2*pad)/(n-1)); const y=v=>h-26-(v/max)*(h-44);
+  const line=(obj,col,wd)=>`<polyline points="${EGO.map(([k],i)=>`${x(i).toFixed(1)},${y(obj.ego[k]||0).toFixed(1)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${wd}" stroke-linejoin="round"/>`;
+  const dots=(obj,col)=>EGO.map(([k],i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(obj.ego[k]||0).toFixed(1)}" r="3" fill="${col}"/>`).join('');
+  const labels=EGO.map(([k,l],i)=>`<text x="${x(i).toFixed(1)}" y="${h-8}" font-size="10" fill="var(--ink-soft)" text-anchor="middle">${l.split(' ')[0]}</text>`).join('');
+  return `<svg class="egogram" viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+    ${prev?line(prev,'#c9c0b2',1.5):''}${prev?dots(prev,'#c9c0b2'):''}
+    ${line(a,'var(--plum)',2.5)}${dots(a,'var(--plum)')}${labels}
+    ${prev?'<text x="'+(w-pad)+'" y="14" font-size="9" fill="#b3a895" text-anchor="end">薄線=前回</text>':''}</svg>`;
+}
+
+/* ---- manager modal ---- */
+function openMgrModal(id){
+  editId=id;const s=staff.find(x=>x.id===id);if(!s)return;const e=evaluate(s);
+  const a=lastAssess(s),prev=s.career.assessments[s.career.assessments.length-2]||null;
+  const advice={red:'複数指標が同時に悪化、または主観の顕著な低下。速やかに面談し業務軽減を実施、産業医・EAP等へ。',orange:'主観と客観、または勤務負荷の重なり。評価と切り離した1on1とシフト・担当の調整を。',yellow:'変化の兆し。日常の声かけと記録で見守りを。',green:'目立つ変化なし。継続観察を。'};
+  const flags=[...e.S.map(f=>`<span class="flag s">${f}</span>`),...e.O.map(f=>`<span class="flag o">${f}</span>`),...e.P.map(f=>`<span class="flag p">${f}</span>`)].join('')||'<span class="flag">特記なし</span>';
+  const notes=s.mgrNotes.map((n,idx)=>`<div class="note-row"><span class="nd">${n.date}</span><span style="flex:1">${esc(n.text)}</span><button class="del" style="margin:0" onclick="delNote(${idx})">削除</button></div>`).join('')||'<div class="hint">まだ記録はありません。</div>';
+  const hints=planHints(s);const hintHTML=hints.length?`<div class="hintbox"><div class="t">💡 計画立案の検討材料（3軸＋キャリアから自動抽出・あくまで参考）</div><ul>${hints.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'';
+  const p=s.plan;
+  $('modal').innerHTML=`
+    <div class="modal-head"><span class="name">${esc(s.name||'(無名)')}</span><span class="role">${esc(s.role)}</span><span class="badge ${LV[e.lv].cls}">${LV[e.lv].t}</span><button class="x" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="alert-box ${e.lv}"><div class="t">判定：${LV[e.lv].t}（総合リスク ${e.risk}/100）</div>${advice[e.lv]}</div>
+      <div class="sec"><h3>支援シグナル<span class="tag mgr">管理者閲覧</span></h3><div class="flags">${flags}</div></div>
+      <div class="sec"><h3>② ヘルス（本人のプライバシー）<span class="tag self">本人のみ</span></h3>
+        <div class="masked">🔒 健診の内容・体調や睡眠の数値・本人メモは<b>本人のみ閲覧</b>です。管理者には上の「支援シグナル」だけが共有されます。</div></div>
+
+      <div class="sec"><h3>🧭 キャリア｜研修項目<span class="tag mgr">管理者編集</span></h3>
+        <div class="field full"><label>研修項目（受講した研修。「、」または改行で区切り）</label><textarea id="f_tr" rows="2" placeholder="認知症ケア研修、リーダー研修、感染対策研修">${esc(s.career.trainings)}</textarea></div></div>
+
+      <div class="sec"><h3>🧭 キャリアアンカー（8分類）<span class="tag mgr">半年に1回</span></h3>
+        ${anchorBars(a)}
+        <div class="num8" style="margin-top:12px">${ANCHORS.map(([k,l])=>`<div class="field"><label>${l}</label><input id="an_${k}" type="number" min="0" step="0.5" value="${a?(a.anchor[k]||0):''}"></div>`).join('')}</div></div>
+
+      <div class="sec"><h3>🧭 エゴグラム（交流分析・5尺度）<span class="tag mgr">半年に1回</span></h3>
+        ${egogramSVG(a,prev)}
+        <div class="num5" style="margin-top:10px">${EGO.map(([k,l])=>`<div class="field"><label>${l.split(' ')[0]}<br><span style="font-size:9px">${l.split(' ')[1]||''}</span></label><input id="eg_${k}" type="number" min="0" max="20" value="${a?(a.ego[k]||0):''}"></div>`).join('')}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+          <input id="as_date" type="date" style="font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:8px" value="${new Date().toISOString().slice(0,10)}">
+          <button class="btn sm" onclick="addAssessment()">この日付でアンカー＋エゴグラムを記録（半年ごと）</button>
+          <span class="hint">測定回数：${s.career.assessments.length}回</span></div></div>
+
+      <div class="sec"><h3>📅 休日・勤務<span class="tag mgr">管理者編集</span></h3><div class="fields">
+        <div class="field"><label>連休(日)</label><input id="f_off" type="number" min="0" value="${s.work.consecOff}"></div>
+        <div class="field"><label>連続勤務(日)</label><input id="f_cw" type="number" min="0" value="${s.work.consecWork}"></div>
+        <div class="field"><label>夜勤(回/月)</label><input id="f_nt" type="number" min="0" value="${s.work.night}"></div>
+        <div class="field"><label>夜勤の平常値</label><input id="f_ntb" type="number" min="0" value="${s.work.nightBase}"></div>
+        <div class="field"><label>残業(h/月)</label><input id="f_ot" type="number" min="0" value="${s.work.overtime}"></div>
+        <div class="field"><label>有給未取得(ヶ月)</label><input id="f_pl" type="number" min="0" value="${s.work.paidLeaveMonths}"></div>
+        <div class="field"><label>欠勤・遅刻(回/月)</label><input id="f_ab" type="number" min="0" value="${s.work.absence}"></div></div></div>
+      <div class="sec"><h3>インシデント<span class="tag mgr">管理者編集</span></h3><div class="fields">
+        <div class="field"><label>今月の件数</label><input id="f_inow" type="number" min="0" value="${s.incident.now}"></div>
+        <div class="field"><label>平常値(件/月)</label><input id="f_ibase" type="number" min="0" value="${s.incident.base}"></div></div></div>
+
+      <div class="sec"><h3>📝 個別支援計画<span class="tag plum">統合ケア</span></h3>
+        ${hintHTML}
+        <div class="fields">
+          <div class="field full"><label>現状・アセスメント（キャリア・心身・勤務の総合所見）</label><textarea id="p_as" rows="2">${esc(p.assessment)}</textarea></div>
+          <div class="field full"><label>課題・支援ニーズ</label><textarea id="p_nd" rows="2">${esc(p.needs)}</textarea></div>
+          <div class="field"><label>短期目標（〜3ヶ月）</label><textarea id="p_gs" rows="2">${esc(p.goalShort)}</textarea></div>
+          <div class="field"><label>長期目標（〜1年）</label><textarea id="p_gl" rows="2">${esc(p.goalLong)}</textarea></div>
+          <div class="field full"><label>具体的な支援内容・取り組み</label><textarea id="p_ac" rows="3">${esc(p.actions)}</textarea></div>
+          <div class="field"><label>担当者</label><input id="p_ow" value="${esc(p.owner)}"></div>
+          <div class="field"><label>見直し予定日</label><input id="p_rv" type="date" value="${p.reviewDate}"></div>
+          <div class="field"><label>本人と共有・合意した日</label><input id="p_ag" type="date" value="${p.agreedDate}"></div>
+        </div>
+        <p class="hint" style="margin-top:8px">※ 計画は本人と共有・合意して進めることを推奨します。</p></div>
+
+      <div class="sec"><h3>対応記録（面談→調整→効果）<span class="tag mgr">管理者のみ</span></h3>${notes}
+        <div class="fields" style="margin-top:10px"><div class="field full"><label>新しい記録を追加</label><textarea id="f_note" rows="2" placeholder="例：1on1実施。夜勤を月2回に調整。2週間後に再確認。"></textarea></div></div>
+        <button class="btn sm" style="margin-top:8px" onclick="addNote()">記録を追加</button></div>
+    </div>
+    <div class="modal-foot"><button class="del" onclick="delStaff()">職員を削除</button>
+      <button class="btn ghost" onclick="closeModal()">閉じる</button><button class="btn" onclick="saveMgr()">保存</button></div>`;
+  $('overlay').classList.add('open');
+}
+function addAssessment(){
+  const s=staff.find(x=>x.id===editId);const d=$('as_date').value||new Date().toISOString().slice(0,10);
+  const anchor={},ego={};let any=false;
+  ANCHORS.forEach(([k])=>{const v=parseFloat($('an_'+k).value);anchor[k]=isNaN(v)?0:v;if(v)any=true;});
+  EGO.forEach(([k])=>{const v=parseFloat($('eg_'+k).value);ego[k]=isNaN(v)?0:v;if(v)any=true;});
+  if(!any){toast('数値を入力してください');return;}
+  s.career.assessments.push({date:d,year:d.slice(0,4),anchor,ego});save();saveProfile(s);openMgrModal(editId);toast('半年測定を記録しました');
+}
+function saveMgr(){
+  const s=staff.find(x=>x.id===editId);if(!s)return;const n=id=>parseFloat($(id).value)||0;
+  s.career.trainings=$('f_tr').value;
+  s.work={consecOff:n('f_off'),consecWork:n('f_cw'),night:n('f_nt'),nightBase:n('f_ntb'),overtime:n('f_ot'),paidLeaveMonths:n('f_pl'),absence:n('f_ab')};
+  s.incident={now:n('f_inow'),base:n('f_ibase')};
+  const pv=id=>$(id).value;
+  const before=JSON.stringify(s.plan);
+  s.plan={assessment:pv('p_as'),needs:pv('p_nd'),goalShort:pv('p_gs'),goalLong:pv('p_gl'),actions:pv('p_ac'),owner:pv('p_ow'),reviewDate:pv('p_rv'),agreedDate:pv('p_ag'),updated:s.plan.updated};
+  if(JSON.stringify({...s.plan,updated:''})!==before.replace(/"updated":"[^"]*"/,'"updated":""')){
+    if(s.plan.assessment||s.plan.needs||s.plan.goalShort||s.plan.actions)s.plan.updated=new Date().toISOString().slice(0,10);
+  }
+  save();saveProfile(s);closeModal();render();toast('保存しました');
+}
+function addNote(){const s=staff.find(x=>x.id===editId);const t=$('f_note').value.trim();if(!t)return;s.mgrNotes.unshift({date:new Date().toISOString().slice(0,10),text:t});save();saveProfile(s);openMgrModal(editId);}
+function delNote(i){const s=staff.find(x=>x.id===editId);s.mgrNotes.splice(i,1);save();saveProfile(s);openMgrModal(editId);}
+function delStaff(){if(!confirm('この職員の記録を削除します。よろしいですか？'))return;const _s=staff.find(x=>x.id===editId);const _nm=_s&&_s.name;staff=staff.filter(x=>x.id!==editId);save();if(_nm)deleteProfile(_nm);closeModal();setRole(role);}
+function addStaff(){const s=blank();staff.push(s);save();openNameModal(s.id);}
+function openNameModal(id){editId=id;const s=staff.find(x=>x.id===id);
+  $('modal').innerHTML=`<div class="modal-head"><span class="name">新規職員</span><button class="x" onclick="closeModal()">×</button></div>
+    <div class="modal-body"><div class="sec"><h3>基本情報</h3><div class="fields">
+      <div class="field"><label>氏名</label><input id="n_name" value="${esc(s.name)}"></div>
+      <div class="field"><label>役割・職種</label><input id="n_role" value="${esc(s.role)}"></div>
+      <div class="field"><label>入職日</label><input id="n_hire" type="date" value="${s.hireDate}"></div></div></div></div>
+    <div class="modal-foot"><button class="del" onclick="delStaff()">取消</button><button class="btn" onclick="saveName()">作成</button></div>`;
+  $('overlay').classList.add('open');}
+function saveName(){const s=staff.find(x=>x.id===editId);s.name=$('n_name').value;s.role=$('n_role').value;s.hireDate=$('n_hire').value;save();saveProfile(s);closeModal();setRole('mgr');toast('職員を追加しました');}
+function closeModal(){$('overlay').classList.remove('open');editId=null;}
+
+/* ---- 管理者認証（メール/パスワード）---- */
+const FB_AUTH_KEY="AIzaSyDCkpzd_zGEL5DXNDP8jJPH-WPC51KhBmw";
+let adminCred=null;            // メモリ内のみ（保存しません）。{email,password}
+async function adminSignIn(email,password){
+  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FB_AUTH_KEY}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});
+  if(!r.ok){const t=await r.text();throw new Error(/EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS/.test(t)?'メールまたはパスワードが違います':('ログイン失敗 HTTP '+r.status));}
+  return (await r.json()).idToken;
+}
+function openLoginModal(){
+  return new Promise(resolve=>{
+    $('modal').innerHTML=`
+      <div class="modal-head"><span class="name">🔒 管理者ログイン</span><button class="x" id="lg_x">×</button></div>
+      <div class="modal-body">
+        <p class="lead" style="margin-bottom:12px">体調・キャリアなどの記録を読み込むには、管理者アカウントでのログインが必要です。</p>
+        <div class="field full"><label>メールアドレス</label><input id="lg_email" type="email" placeholder="管理者のメール" autocomplete="username"></div>
+        <div class="field full" style="margin-top:10px"><label>パスワード</label><input id="lg_pw" type="password" autocomplete="current-password"></div>
+        <div id="lg_err" style="color:var(--red);font-size:13px;margin-top:8px;min-height:18px"></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" id="lg_cancel">閉じる</button><button class="btn" id="lg_ok">ログイン</button></div>`;
+    $('overlay').classList.add('open');
+    const close=v=>{$('overlay').classList.remove('open');resolve(v);};
+    $('lg_x').onclick=()=>close(false);
+    $('lg_cancel').onclick=()=>close(false);
+    $('lg_ok').onclick=async()=>{
+      const email=$('lg_email').value.trim(),pw=$('lg_pw').value,err=$('lg_err');err.textContent='';
+      if(!email||!pw){err.textContent='メールとパスワードを入力してください。';return;}
+      const btn=$('lg_ok');btn.disabled=true;btn.textContent='確認中…';
+      try{await adminSignIn(email,pw);adminCred={email,password:pw};close(true);}
+      catch(e){err.textContent=e.message;btn.disabled=false;btn.textContent='ログイン';}
+    };
+    setTimeout(()=>{const el=$('lg_email');if(el)el.focus();},50);
+  });
+}
+
+/* ---- 管理者データの保存先（Firestore: staffProfiles）---- */
+const FB_PROJECT="ooyake-staff";
+const FB_API="AIzaSyDCkpzd_zGEL5DXNDP8jJPH-WPC51KhBmw";
+async function getAdminToken(){if(!adminCred)throw new Error('管理者ログインが必要です');return await adminSignIn(adminCred.email,adminCred.password);}
+function profileDocId(name){return encodeURIComponent(String(name).replace(/[\/\\#?]/g,'-'));}
+function ensureShape(s){const b=blank();return Object.assign(b,s,{id:s.id||b.id,career:Object.assign({trainings:'',assessments:[]},s.career||{}),work:Object.assign({},b.work,s.work||{}),incident:Object.assign({},b.incident,s.incident||{}),plan:Object.assign({},b.plan,s.plan||{}),mgrNotes:Array.isArray(s.mgrNotes)?s.mgrNotes:[],healthLog:[]});}
+async function saveProfile(s){
+  if(!adminCred||!s||!s.name)return;
+  try{
+    const token=await getAdminToken();
+    const copy=Object.assign({},s,{healthLog:[]});   // 体調ログは同期で再取得するため保存しない
+    const url=`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/staffProfiles/${profileDocId(s.name)}?key=${FB_API}`;
+    const body={fields:{name:{stringValue:s.name},data:{stringValue:JSON.stringify(copy)},updated:{stringValue:new Date().toISOString()}}};
+    const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+  }catch(e){toast('クラウド保存に失敗：'+e.message);}
+}
+async function deleteProfile(name){
+  if(!adminCred||!name)return;
+  try{
+    const token=await getAdminToken();
+    const url=`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/staffProfiles/${profileDocId(name)}?key=${FB_API}`;
+    await fetch(url,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});
+  }catch(e){toast('クラウド削除に失敗：'+e.message);}
+}
+async function loadProfiles(token){
+  const url=`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/staffProfiles?key=${FB_API}&pageSize=500`;
+  const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+  if(!res.ok)throw new Error('staffProfiles HTTP '+res.status);
+  const docs=(await res.json()).documents||[];
+  docs.forEach(d=>{const f=d.fields||{};const raw=f.data&&f.data.stringValue;if(!raw)return;try{staff.push(ensureShape(JSON.parse(raw)));}catch(e){}});
+}
+
+/* ---- Firestore 同期（管理者データ＋体調・キャリア・エゴを読み込み）---- */
+async function syncFirestore(){
+  const FB={apiKey:FB_API,projectId:FB_PROJECT};
+  const val=f=>!f?undefined:(f.stringValue!==undefined?f.stringValue:f.integerValue!==undefined?+f.integerValue:f.doubleValue!==undefined?+f.doubleValue:f.booleanValue);
+  if(!adminCred)throw new Error('管理者ログインが必要です');
+  const token=await adminSignIn(adminCred.email,adminCred.password);
+  staff=[];                       // Firestoreを正として再構築
+  await loadProfiles(token);      // まず管理者データを読み込み
+  const getColl=async name=>{
+    const url=`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/${name}?key=${FB.apiKey}&pageSize=500`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    if(!res.ok)throw new Error(name+' HTTP '+res.status+'：'+(await res.text()).slice(0,120));
+    return (await res.json()).documents||[];
+  };
+  const findStaff=(name,dept)=>{let s=staff.find(x=>x.name===name);if(!s){s=blank();s.name=name;if(dept)s.role=dept;staff.push(s);}return s;};
+  const getAssessment=(s,yr,date)=>{
+    let a=s.career.assessments.find(x=>x.year&&x.year===yr);
+    if(!a){a={date:date||new Date().toISOString().slice(0,10),year:yr,anchor:{tf:0,gm:0,au:0,se:0,ec:0,sv:0,ch:0,ls:0},ego:{cp:0,np:0,a:0,fc:0,ac:0}};s.career.assessments.push(a);}
+    if(date)a.date=date;return a;
+  };
+  let nH=0,nA=0,nE=0;
+
+  // 体調 healthChecks
+  (await getColl('healthChecks')).forEach(d=>{
+    const f=d.fields||{};const name=val(f.name);if(!name)return;
+    const s=findStaff(name,val(f.dept));
+    const date=val(f.date)||'';const day=date.slice(0,10);
+    const entry={ts:val(f.ts)||date,cond:+val(f.cond)||3,mood:+val(f.mood)||3,sleep:+val(f.sleep)||3,back:0,wrist:0,note:val(f.note)||'',src:'firestore'};
+    const ex=day&&s.healthLog.find(l=>(l.ts||'').slice(0,10)===day);
+    if(ex)Object.assign(ex,entry);else s.healthLog.unshift(entry);nH++;
+  });
+
+  // キャリアアンカー careerAnchors
+  (await getColl('careerAnchors')).forEach(d=>{
+    const f=d.fields||{};const name=val(f.name);if(!name)return;
+    const s=findStaff(name,val(f.dept));
+    const yr=(val(f.year)||val(f.date)||'')+'';const a=getAssessment(s,yr,val(f.date)||'');
+    ['tf','gm','au','se','ec','sv','ch','ls'].forEach(k=>{const v=val(f[k]);if(v!==undefined)a.anchor[k]=+v||0;});nA++;
+  });
+
+  // エゴグラム egograms
+  (await getColl('egograms')).forEach(d=>{
+    const f=d.fields||{};const name=val(f.name);if(!name)return;
+    const s=findStaff(name,val(f.dept));
+    const yr=(val(f.year)||val(f.date)||'')+'';const a=getAssessment(s,yr,val(f.date)||'');
+    ['cp','np','a','fc','ac'].forEach(k=>{const v=val(f[k]);if(v!==undefined)a.ego[k]=+v||0;});nE++;
+  });
+
+  staff.forEach(s=>{
+    s.career.assessments.sort((x,y)=>String(x.year||x.date).localeCompare(String(y.year||y.date)));
+    s.healthLog.sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
+  });
+  await save();
+  syncFirestore._last={h:nH,a:nA,e:nE};
+  return nH+nA+nE;
+}
+
+/* ---- CSV import (キャリアアンカー / エゴグラム / 体調チェック) ---- */
+let parsedImport=null;
+function openImportModal(){
+  parsedImport=null;
+  $('modal').innerHTML=`
+    <div class="modal-head"><span class="name">⬆ 診断データ取込</span><button class="x" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="hintbox"><div class="t">📥 対応している診断・記録データ</div>
+        <ul><li><b>キャリアアンカー</b>診断（列に TF・GM・AU・SE・EC・SV・CH・LS）</li>
+        <li><b>エゴグラム</b>診断（列に CP・NP・A・FC・AC）</li>
+        <li><b>体調チェック</b>（列に 体調・気持ち・睡眠）</li></ul>
+        各アプリの管理者パネルからエクスポートしたCSVを、<b>ヘッダー行ごと</b>貼り付けてください。タブ区切り・カンマ区切りのどちらも対応。<b>氏名</b>で職員を照合し、種別は自動判定します。</div>
+      <div class="field full"><label>CSVを貼り付け（1行目＝ヘッダー）</label><textarea id="imp_text" rows="7" placeholder="氏名  部署  年度  診断日  1位  2位  3位  TF  GM  AU  SE  EC  SV  CH  LS  保存日時"></textarea></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:10px;color:var(--ink)"><input type="checkbox" id="imp_new" checked style="width:16px;height:16px">未登録の氏名は新規職員として自動追加する</label>
+      <div style="margin-top:12px"><button class="btn sm" onclick="parseImport()">解析してプレビュー</button></div>
+      <div id="imp_preview" style="margin-top:14px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">閉じる</button><button class="btn" id="imp_apply" style="display:none" onclick="applyImport()">この内容で取り込む</button></div>`;
+  $('overlay').classList.add('open');
+}
+function splitCSV(text){
+  const lines=String(text||'').trim().split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length)return null;
+  const delim=lines[0].indexOf('\t')>=0?'\t':',';
+  return lines.map(l=>l.split(delim).map(c=>c.replace(/^"|"$/g,'').trim()));
+}
+function parseImport(){
+  const rows=splitCSV($('imp_text').value);const pv=$('imp_preview');
+  const fail=m=>{pv.innerHTML=`<div class="alert-box orange"><div class="t">取り込めませんでした</div>${m}</div>`;$('imp_apply').style.display='none';parsedImport=null;};
+  if(!rows||rows.length<2)return fail('ヘッダー行＋データ行を貼り付けてください。');
+  const head=rows[0].map(h=>h.toUpperCase());const idx=n=>head.indexOf(n.toUpperCase());
+  const hasHealth=idx('体調')>=0&&idx('気持ち')>=0;
+  const hasAnchor=idx('TF')>=0&&idx('GM')>=0, hasEgo=idx('CP')>=0&&idx('NP')>=0;
+  let kind=hasHealth?'health':(hasAnchor&&!hasEgo?'anchor':(hasEgo&&!hasAnchor?'ego':null));
+  if(!kind)return fail('キャリアアンカー（TF・GM…）／エゴグラム（CP・NP…）／体調（体調・気持ち・睡眠）のいずれの列も見つかりません。ヘッダー行も含めて貼り付けているかご確認ください。');
+  let ni=idx('氏名');if(ni<0)ni=0;
+  const di=idx('診断日')>=0?idx('診断日'):idx('日付');const yi=idx('年度');
+  const recs=[];
+  if(kind==='health'){
+    const mi=idx('気持ち'),si=idx('睡眠'),ti=idx('体調'),hi=idx('ひとこと');
+    for(let r=1;r<rows.length;r++){const row=rows[r];if(!row[ni])continue;
+      recs.push({name:row[ni],date:di>=0?row[di]:'',mood:parseFloat(row[mi])||0,sleep:parseFloat(row[si])||0,cond:parseFloat(row[ti])||0,note:hi>=0?row[hi]:''});}
+  }else{
+    const cols=kind==='anchor'?['TF','GM','AU','SE','EC','SV','CH','LS']:['CP','NP','A','FC','AC'];
+    for(let r=1;r<rows.length;r++){const row=rows[r];if(!row[ni])continue;
+      const rec={name:row[ni],year:yi>=0?row[yi]:'',date:di>=0?row[di]:'',vals:{}};
+      cols.forEach(k=>{const v=parseFloat(row[idx(k)]);rec.vals[k.toLowerCase()]=isNaN(v)?0:v;});recs.push(rec);}
+  }
+  if(!recs.length)return fail('データ行が見つかりませんでした。');
+  parsedImport={kind,recs};
+  let matched=0;const newp=new Set();
+  recs.forEach(rec=>{staff.find(s=>s.name===rec.name)?matched++:newp.add(rec.name);});
+  const kn={anchor:'キャリアアンカー',ego:'エゴグラム',health:'体調チェック'}[kind];
+  const rowHTML=kind==='health'
+    ?recs.slice(0,20).map(rec=>`<div class="log-row"><span class="d">${esc(rec.name)}</span><span class="v"><span>${esc(rec.date)}</span><span>体調${rec.cond}</span><span>気持ち${rec.mood}</span><span>睡眠${rec.sleep}</span>${rec.note?`<span>📝${esc(rec.note)}</span>`:''}</span></div>`).join('')
+    :recs.slice(0,20).map(rec=>`<div class="log-row"><span class="d">${esc(rec.name)}</span><span class="v"><span>${esc(rec.year)||'年度?'}</span>${rec.date?`<span>${esc(rec.date)}</span>`:''}${Object.entries(rec.vals).map(([k,v])=>`<span>${k.toUpperCase()}:${v}</span>`).join('')}</span></div>`).join('');
+  pv.innerHTML=`<div class="alert-box green"><div class="t">${kn}データを ${recs.length}件 検出しました</div>
+    既存職員と一致：<b>${matched}件</b>／未登録の氏名：<b>${newp.size}名</b>${newp.size?'（'+[...newp].map(esc).join('、')+'）':''}${kind==='health'?'<br><span style="font-size:11px">※ 体調・気持ち・睡眠をそのまま取り込みます。同じ氏名・同じ日付は上書き。</span>':''}</div>
+    <div class="log-list">${rowHTML}${recs.length>20?'<p class="hint">ほか '+(recs.length-20)+' 件…</p>':''}</div>`;
+  $('imp_apply').style.display='';
+}
+function applyImport(){
+  if(!parsedImport){toast('先に解析してください');return;}
+  const addNew=$('imp_new').checked,{kind,recs}=parsedImport;let done=0,skip=0;
+  recs.forEach(rec=>{
+    let s=staff.find(x=>x.name===rec.name);
+    if(!s){if(!addNew){skip++;return;}s=blank();s.name=rec.name;staff.push(s);}
+    if(kind==='health'){
+      const day=(rec.date||'').slice(0,10);
+      const entry={ts:rec.date||new Date().toISOString().slice(0,10),cond:rec.cond||3,mood:rec.mood||3,sleep:rec.sleep||3,back:0,wrist:0,note:rec.note||'',src:'import'};
+      const ex=day&&s.healthLog.find(l=>(l.ts||'').slice(0,10)===day);
+      if(ex)Object.assign(ex,entry);else s.healthLog.unshift(entry);
+    }else{
+      const yr=rec.year||rec.date||'';
+      let a=s.career.assessments.find(x=>x.year&&x.year===yr);
+      if(!a){a={date:rec.date||new Date().toISOString().slice(0,10),year:yr,anchor:{tf:0,gm:0,au:0,se:0,ec:0,sv:0,ch:0,ls:0},ego:{cp:0,np:0,a:0,fc:0,ac:0}};s.career.assessments.push(a);}
+      if(rec.date)a.date=rec.date;
+      if(kind==='anchor')Object.assign(a.anchor,rec.vals);else Object.assign(a.ego,rec.vals);
+    }
+    done++;});
+  staff.forEach(s=>{s.career.assessments.sort((x,y)=>String(x.year||x.date).localeCompare(String(y.year||y.date)));s.healthLog.sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));});
+  save();closeModal();setRole('mgr');toast(`${done}件を取り込みました${skip?'／'+skip+'件スキップ':''}`);
+}
+
+/* ---- staff self view ---- 体調・気持ち・睡眠（別アプリと同一項目） */
+let draft={cond:0,mood:0,sleep:0,back:0,wrist:0};
+let healthRange=30; // 経過グラフの表示期間（日）。0=全期間
+function multiLine(logs){
+  if(logs.length<2)return '<p class="hint">この期間の記録が2件未満です。期間を広げるか、体調チェックアプリで日々の記録を追加してください。</p>';
+  const w=340,h=140,padL=22,padR=8,padB=24,padT=10,min=1,max=5,n=logs.length;
+  const x=i=>padL+i*(w-padL-padR)/(n-1);
+  const y=v=>padT+(max-(+v||min))/(max-min)*(h-padT-padB);
+  const series=[['cond','体調','#dd8341'],['mood','気持ち','#5a6e9c'],['sleep','睡眠','#4a8c6a']];
+  const grid=[1,2,3,4,5].map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${w-padR}" y2="${y(v).toFixed(1)}" stroke="var(--line)" stroke-width="${v===3?1:0.5}"/><text x="${padL-4}" y="${(y(v)+3).toFixed(1)}" font-size="8" fill="var(--ink-soft)" text-anchor="end">${v}</text>`).join('');
+  const lines=series.map(([k,,col])=>{
+    const pts=logs.map((l,i)=>`${x(i).toFixed(1)},${y(l[k]).toFixed(1)}`).join(' ');
+    const dots=logs.map((l,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(l[k]).toFixed(1)}" r="2.5" fill="${col}"/>`).join('');
+    return `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>${dots}`;
+  }).join('');
+  const dlab=i=>{const t=logs[i].ts||'';return t.slice(5,10).replace('-','/');};
+  const xi=[...new Set([0,Math.floor((n-1)/2),n-1])];
+  const xlabs=xi.map(i=>`<text x="${x(i).toFixed(1)}" y="${h-8}" font-size="8" fill="var(--ink-soft)" text-anchor="middle">${dlab(i)}</text>`).join('');
+  const legend=series.map(([,nm,col])=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);margin-right:14px"><span style="width:14px;height:3px;background:${col};display:inline-block;border-radius:2px"></span>${nm}</span>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" style="max-width:440px">${grid}${lines}${xlabs}</svg><div style="margin-top:6px">${legend}</div>`;
+}
+function staffView(){
+  const s=staff.find(x=>x.id===currentStaffId);if(!s)return '<div class="empty">職員が選択されていません。</div>';
+  if(view==='mycareer'){const a=lastAssess(s),prev=s.career.assessments[s.career.assessments.length-2]||null;const ta=topAnchor(a),te=topEgo(a);
+    return `<div class="panel"><h2>自分のキャリア</h2><p class="lead">半年ごとの測定結果は管理者・相談員が登録します。自己理解の手がかりとしてご覧ください（傾向であり決めつけではありません）。</p>
+      <div class="readonly-grid" style="margin-bottom:14px">
+        <div class="ro"><div class="l">一番高いキャリアアンカー</div><div class="v">${ta?ta[1]:'未測定'}</div></div>
+        <div class="ro"><div class="l">エゴグラム最大</div><div class="v">${te?te[1]:'未測定'}</div></div>
+        <div class="ro"><div class="l">最終測定日</div><div class="v">${a?a.date:'—'}</div></div></div>
+      <h2 style="font-size:15px">キャリアアンカー</h2>${anchorBars(a)}
+      <h2 style="font-size:15px;margin-top:16px">エゴグラム</h2>${egogramSVG(a,prev)}
+      <h2 style="font-size:15px;margin-top:16px">受講した研修</h2><p style="font-size:13px">${esc(s.career.trainings||'—')}</p></div>`;}
+  if(view==='mywork'){const w=s.work;
+    return `<div class="panel"><h2>自分の勤務状況</h2><p class="lead">勤務データは管理者が登録します。閲覧のみ可能です。</p><div class="readonly-grid">
+      <div class="ro"><div class="l">直近の連休</div><div class="v">${w.consecOff} 日</div></div>
+      <div class="ro"><div class="l">連続勤務</div><div class="v">${w.consecWork} 日</div></div>
+      <div class="ro"><div class="l">夜勤</div><div class="v">${w.night} 回/月</div></div>
+      <div class="ro"><div class="l">残業</div><div class="v">${w.overtime} h/月</div></div>
+      <div class="ro"><div class="l">有給未取得</div><div class="v">${w.paidLeaveMonths} ヶ月</div></div></div></div>`;}
+  const e=evaluate(s);
+  const self={green:['calm','今日も無理のないペースで','現時点で目立つ不調のサインはありません。しんどい時は早めに声をかけてくださいね。'],
+    yellow:['care','少し気にかけてみましょう','変化の兆しがあります。休息や相談など、自分をいたわる時間をとってみてください。'],
+    orange:['rest','お疲れがたまっているようです','負担が重なっているサインです。無理を続けず、上長や相談窓口に話してみることをおすすめします。'],
+    red:['rest','一人で抱えないでください','強い負担のサインが出ています。早めに上長・産業医・相談窓口へつながってください。あなたの安全が最優先です。']}[e.lv];
+  const now=Date.now();
+  const logs=s.healthLog.filter(l=>{if(healthRange<=0)return true;const t=Date.parse(l.ts);return !isNaN(t)&&(now-t)<=healthRange*86400000;}).slice().sort((a,b)=>String(a.ts).localeCompare(String(b.ts)));
+  const last7=s.healthLog.filter(l=>{const t=Date.parse(l.ts);return !isNaN(t)&&(now-t)<=7*86400000;});
+  const avg=k=>last7.length?(last7.reduce((a,l)=>a+(+l[k]||0),0)/last7.length).toFixed(1):'—';
+  const lt=s.healthLog[0];
+  const ranges=[[14,'2週間'],[30,'1ヶ月'],[90,'3ヶ月'],[0,'全期間']];
+  return `<div class="selfmsg ${self[0]}"><b>${self[1]}</b>${self[2]}</div>
+    <div class="panel"><h2>体調の経過</h2>
+      <p class="lead">日々の入力は<b>体調チェックアプリ</b>で行います。その記録がここに反映され、推移を確認できます。${lt&&lt.ts?'　最終記録：'+lt.ts.slice(0,10):'　まだ記録がありません'}</p>
+      <div class="readonly-grid" style="margin-bottom:14px">
+        <div class="ro"><div class="l">最新の体調</div><div class="v">${lt?lt.cond:'—'}<span style="font-size:11px;font-weight:400;color:var(--ink-soft)"> ／ 7日平均 ${avg('cond')}</span></div></div>
+        <div class="ro"><div class="l">最新の気持ち</div><div class="v">${lt?lt.mood:'—'}<span style="font-size:11px;font-weight:400;color:var(--ink-soft)"> ／ 7日平均 ${avg('mood')}</span></div></div>
+        <div class="ro"><div class="l">最新の睡眠</div><div class="v">${lt?lt.sleep:'—'}<span style="font-size:11px;font-weight:400;color:var(--ink-soft)"> ／ 7日平均 ${avg('sleep')}</span></div></div></div>
+      <div class="seg" style="margin-bottom:12px">${ranges.map(([v,l])=>`<button type="button" class="range-btn ${v===healthRange?'on':''}" data-v="${v}">${l}</button>`).join('')}</div>
+      ${multiLine(logs)}</div>
+    <div class="panel"><h2>記録一覧</h2><div class="log-list">${logRows(s)}</div></div>
+    <div class="panel"><h2>健康診断の記録</h2><p class="lead">健診結果は別アプリに無いため、こちらで随時追加できます（本人のみ閲覧）。</p>
+      <div class="fields"><div class="field"><label>受診日</label><input id="c_date" type="date"></div><div class="field"><label>BMI</label><input id="c_bmi" placeholder="例 22.5"></div>
+        <div class="field"><label>血圧</label><input id="c_bp" placeholder="例 128/82"></div><div class="field full"><label>所見・特記</label><textarea id="c_find" rows="2"></textarea></div></div>
+      <button class="btn sm" style="margin-top:10px" id="c_submit">健診を追加</button><div class="log-list" style="margin-top:10px">${checkupRows(s)}</div></div>`;
+}
+function scaleBlock(k,label,lo,hi){return `<div class="check-scale"><label>${label}</label><div class="scale" data-k="${k}">${[1,2,3,4,5].map(v=>`<button type="button" data-v="${v}">${v}</button>`).join('')}</div><div class="ends"><span>${lo}</span><span>${hi}</span></div></div>`;}
+function segBlock(k){const lab=['なし','軽い','中等度','強い'];return `<div class="seg" data-k="${k}">${lab.map((l,v)=>`<button type="button" data-v="${v}" class="${v===0?'on':''}">${l}</button>`).join('')}</div>`;}
+function sparkline(arr){if(arr.length<2)return '<p class="hint">記録が2件以上たまると推移が表示されます。</p>';
+  const w=300,h=54,max=5,min=1;const step=w/(arr.length-1);
+  const pts=arr.map((v,i)=>`${(i*step).toFixed(1)},${(h-((v-min)/(max-min))*(h-8)-4).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="var(--staff)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${arr.map((v,i)=>`<circle cx="${(i*step).toFixed(1)}" cy="${(h-((v-min)/(max-min))*(h-8)-4).toFixed(1)}" r="3" fill="var(--staff)"/>`).join('')}</svg>`;}
+function logRows(s){if(!s.healthLog.length)return '<p class="hint">まだ記録がありません。</p>';const lab=['なし','軽','中','強'];
+  return s.healthLog.slice(0,12).map(l=>`<div class="log-row"><span class="d">${l.ts.slice(0,16).replace('T',' ')}</span><span class="v"><span>体調${l.cond}</span><span>気持ち${l.mood}</span><span>睡眠${l.sleep}</span><span>腰:${lab[l.back]}</span><span>手首:${lab[l.wrist]}</span>${l.note?`<span>📝${esc(l.note)}</span>`:''}</span></div>`).join('');}
+function checkupRows(s){if(!s.checkups.length)return '';return s.checkups.slice().reverse().map(c=>`<div class="log-row"><span class="d">${c.date||'—'}</span><span class="v"><span>BMI ${esc(c.bmi||'—')}</span><span>血圧 ${esc(c.bp||'—')}</span>${c.findings?`<span>📝${esc(c.findings)}</span>`:''}</span></div>`).join('');}
+function bindStaff(){
+  document.querySelectorAll('.scale').forEach(sc=>{const k=sc.dataset.k;sc.querySelectorAll('button').forEach(b=>b.onclick=()=>{draft[k]=+b.dataset.v;sc.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});});
+  document.querySelectorAll('.seg').forEach(sg=>{const k=sg.dataset.k;if(!k)return;sg.querySelectorAll('button').forEach(b=>b.onclick=()=>{draft[k]=+b.dataset.v;sg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});});
+  document.querySelectorAll('.range-btn').forEach(b=>b.onclick=()=>{healthRange=+b.dataset.v;render();bindStaff();});
+  const sub=$('h_submit');if(sub)sub.onclick=submitHealth;const cs=$('c_submit');if(cs)cs.onclick=submitCheckup;
+}
+function submitHealth(){if(!draft.cond||!draft.mood||!draft.sleep){toast('体調・気持ち・睡眠をタップしてください');return;}
+  const s=staff.find(x=>x.id===currentStaffId);s.healthLog.unshift({ts:new Date().toISOString().slice(0,16),cond:draft.cond,mood:draft.mood,sleep:draft.sleep,back:draft.back||0,wrist:draft.wrist||0,note:($('h_note').value||'').trim()});
+  draft={cond:0,mood:0,sleep:0,back:0,wrist:0};save();render();bindStaff();toast('記録しました。お疲れさまです');}
+function submitCheckup(){const s=staff.find(x=>x.id===currentStaffId);const d=$('c_date').value,bmi=$('c_bmi').value,bp=$('c_bp').value,f=$('c_find').value;
+  if(!d&&!bmi&&!bp&&!f){toast('入力がありません');return;}s.checkups.push({date:d,bmi,bp,findings:f});save();render();bindStaff();toast('健診を追加しました');}
+
+/* ---- proposal ---- */
+function proposalHTML(){return `<div class="proposal"><h3>キャリア項目・体調チェック・個別支援計画の設計</h3>
+  <ul>
+    <li><b>🧭 キャリア項目</b>：研修項目／キャリアアンカー(8分類の数値)／エゴグラム(CP・NP・A・FC・AC の5尺度)。アンカーとエゴグラムは<b>半年に1回</b>の測定として日付つきで蓄積し、前回との比較（エゴグラムは薄線で重ね表示）で変化を追えます。</li>
+    <li><b>🩺 体調チェック</b>：別アプリと同一の<b>体調・気持ち・睡眠</b>の3項目（1〜5）＋腰・手首。CSV取込でも、その場の本人入力でも同じ枠に蓄積されます。</li>
+    <li><b>⬆ CSV取込</b>：キャリアアンカー・エゴグラム・体調チェックの3種を、ヘッダーから自動判定して氏名で照合・取込。別アプリの診断結果をこのダッシュボードに集約できます。</li>
+    <li><b>📝 個別支援計画</b>：現状→課題・ニーズ→短期/長期目標→具体的支援→担当・見直し、の構成。3軸のアラートとキャリアアンカー/エゴグラムから<b>検討材料(ヒント)を自動抽出</b>し、計画文は人が書きます。</li>
+    <li><b>アクセス分離</b>：心身の生データは本人のみ。キャリア測定・勤務・計画は管理者（相談員）が編集。計画は本人と共有・合意して進める前提です。</li>
+    <li><b>注意</b>：キャリアアンカー・エゴグラムは自己理解と育成の手がかりであり、人を固定的に判定するものではありません。表現は「傾向」にとどめています。</li>
+  </ul>
+  <p style="margin-top:10px;font-size:12px;color:var(--ink-soft)">⚠️ モード切替は設計デモです。実運用では端末分離・ログイン認証・保存先の暗号化・就業規則と本人同意の整備など、正式な情報セキュリティ対応が別途必要です。CSV貼り付けは「今すぐ反映」用の橋渡しで、最終的にはFirestore等の共通バックエンドで常時同期する形が理想です。</p></div>`;}
+
+/* ---- seed ---- */
+function seed(){const mk=o=>Object.assign(blank(),o);const now=Date.now();
+  const log=arr=>arr.map((v,i)=>({ts:new Date(now-i*86400000).toISOString().slice(0,16),cond:v[0],mood:v[1],sleep:v[2],back:v[3]||0,wrist:v[4]||0,note:''}));
+  const as=(date,an,eg)=>({date,year:date.slice(0,4),anchor:{tf:an[0],gm:an[1],au:an[2],se:an[3],ec:an[4],sv:an[5],ch:an[6],ls:an[7]},ego:{cp:eg[0],np:eg[1],a:eg[2],fc:eg[3],ac:eg[4]}});
+  const d6=new Date(now-180*86400000).toISOString().slice(0,10),d0=new Date(now).toISOString().slice(0,10);
+  return [
+    mk({name:'職員A（見本）',role:'介護福祉士',
+        career:{trainings:'認知症ケア研修、感染対策研修',assessments:[as(d6,[7,3,4,6,2,8,4,7],[8,16,9,7,17]),as(d0,[7,3,4,7,2,9,4,8],[9,15,8,6,18])]},
+        healthLog:log([[2,1,2,2,1],[2,2,2,2,1],[2,2,2,1,0]]),work:{consecWork:7,consecOff:1,night:7,nightBase:4,overtime:48,paidLeaveMonths:4,absence:2},incident:{now:5,base:1},
+        mgrNotes:[{date:new Date(now-5*86400000).toISOString().slice(0,10),text:'シフト過密。来週1on1予定。'}],
+        plan:{assessment:'勤務負荷が高く心身のサインあり。奉仕志向が強く責任を抱え込みやすい。',needs:'業務量の調整と休息確保。安心して相談できる関係。',goalShort:'夜勤を月4回以内に。連休を月1回確保。',goalLong:'負担の偏りを解消し定着につなげる。',actions:'シフト見直し、困難ケースの担当分散、2週間ごとの面談。',owner:'施設長／相談員',reviewDate:new Date(now+14*86400000).toISOString().slice(0,10),agreedDate:'',updated:d0}}),
+    mk({name:'職員B（見本）',role:'介護職員',
+        career:{trainings:'初任者研修',assessments:[as(d0,[5,4,5,7,3,6,5,6],[6,12,14,13,9])]},
+        healthLog:log([[2,3,2,1,0],[3,3,3,1,0],[3,4,3,0,0]]),work:{consecWork:5,consecOff:2,night:5,nightBase:4,overtime:36,paidLeaveMonths:1,absence:0},incident:{now:1,base:1}}),
+    mk({name:'職員C（見本）',role:'ケアマネジャー',
+        career:{trainings:'介護支援専門員研修、リーダー研修',assessments:[as(d0,[8,7,5,5,4,7,6,5],[10,14,16,11,7])]},
+        healthLog:log([[4,4,4,0,0],[4,5,4,0,0],[5,4,4,0,0]]),work:{consecWork:4,consecOff:3,night:0,nightBase:0,overtime:12,paidLeaveMonths:0,absence:0},incident:{now:0,base:0}})
+  ];
+}
+/* ---- init ---- */
+document.querySelectorAll('#roleswitch button').forEach(b=>b.onclick=()=>setRole(b.dataset.r));
+$('staffPicker').onchange=e=>{currentStaffId=e.target.value;draft={cond:0,mood:0,sleep:0,back:0,wrist:0};render();bindStaff();};
+$('addBtn').onclick=addStaff;
+$('importBtn').onclick=openImportModal;
+$('syncBtn').onclick=async()=>{if(!adminCred){const ok=await openLoginModal();if(!ok)return;}const b=$('syncBtn');const t=b.textContent;b.textContent='同期中…';b.disabled=true;try{await syncFirestore();render();const L=syncFirestore._last||{h:0,a:0,e:0};toast(`同期完了：体調${L.h}・キャリア${L.a}・エゴ${L.e} 件`);}catch(e){toast('同期に失敗：'+e.message);}b.textContent=t;b.disabled=false;};
+$('overlay').onclick=e=>{if(e.target===$('overlay'))closeModal();};
+(async()=>{await load();setRole('mgr');const ok=await openLoginModal();if(ok){try{await syncFirestore();render();}catch(e){toast('読み込みに失敗：'+e.message);}}})();
+</script>
+</body>
+</html>
