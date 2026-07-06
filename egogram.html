@@ -699,25 +699,6 @@ function deleteRecord(name, year) {
 // ============================================================
 const FB_CONFIG = { apiKey: "AIzaSyDCkpzd_zGEL5DXNDP8jJPH-WPC51KhBmw", projectId: "ooyake-staff" };
 
-// 匿名認証：端末ごとに匿名アカウントを1つだけ作り、以後はトークンを更新して使い回す（画面には何も出ません）
-async function getAuthToken() {
-  const RT_KEY = 'oyake_auth_rt';
-  let rt = null; try { rt = localStorage.getItem(RT_KEY); } catch (e) {}
-  if (rt) {
-    try {
-      const r = await fetch(`https://securetoken.googleapis.com/v1/token?key=${FB_CONFIG.apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt) });
-      if (r.ok) return (await r.json()).id_token;
-    } catch (e) {}
-  }
-  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB_CONFIG.apiKey}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) });
-  if (!r.ok) throw new Error('認証に失敗 HTTP ' + r.status);
-  const d = await r.json();
-  try { localStorage.setItem(RT_KEY, d.refreshToken); } catch (e) {}
-  return d.idToken;
-}
-
 async function writeToFirestore(record) {
   const docId = encodeURIComponent(`${record.name}_${record.year}`.replace(/[\/\\#?]/g, '-'));
   const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/egograms/${docId}?key=${FB_CONFIG.apiKey}`;
@@ -735,8 +716,7 @@ async function writeToFirestore(record) {
     pattern: { stringValue: record.pattern || '' },
     ts:      { stringValue: record.savedAt || '' }
   }};
-  const token = await getAuthToken();
-  const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+  const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!res.ok) throw new Error('HTTP ' + res.status + '：' + (await res.text()).slice(0, 160));
   return res.json();
 }
