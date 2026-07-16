@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1on1面談 事前入力 ｜ おおやけの里</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f4f1ea;--panel:#fffdf8;--ink:#2b2a28;--ink-soft:#6b675f;--line:#e3ddd0;
+    --accent:#3f6b5f;--accent-bg:#e8efe9;--red:#c0533f;--yellow:#d6a93a;--green:#4a8c6a;
+    --shadow:0 1px 2px rgba(43,42,40,.04),0 8px 24px rgba(43,42,40,.06);}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;font-size:14px;
+    background-image:radial-gradient(circle at 1px 1px,rgba(63,107,95,.05) 1px,transparent 0);background-size:22px 22px;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 14px 90px}
+  h1{font-family:"Noto Serif JP",serif;font-size:19px;color:var(--accent)}
+  .cap{font-size:12px;color:var(--ink-soft);margin:2px 0 14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .step{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .step .no{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+  .step h2{font-size:15px}
+  .step .done{margin-left:auto;font-size:11px;font-weight:700;color:var(--green);background:#e7f2ea;border-radius:100px;padding:2px 10px;white-space:nowrap}
+  .step .todo{margin-left:auto;font-size:11px;font-weight:700;color:#a08a1e;background:#faf5dc;border-radius:100px;padding:2px 10px;white-space:nowrap}
+  label{font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin:10px 0 4px}
+  input[type=text],textarea{width:100%;font-family:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  textarea{resize:vertical}
+  .opts{display:flex;flex-wrap:wrap;gap:7px}
+  .opt{border:1.5px solid var(--line);border-radius:100px;padding:7px 14px;font-size:13px;background:#fff;cursor:pointer;font-family:inherit}
+  .opt.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12.5px;background:#fff;cursor:pointer;font-family:inherit}
+  .chip.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .btn{display:inline-block;width:100%;text-align:center;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none}
+  .btn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}
+  .btn:disabled{opacity:.5}
+  .note{font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.7}
+  .qa{border-bottom:1px solid var(--line);padding:10px 0}
+  .qa:last-child{border-bottom:none}
+  .qa .qt{font-size:13px;margin-bottom:7px}
+  .scale{display:flex;gap:6px}
+  .scale button{flex:1;padding:8px 0;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;font-size:12px;cursor:pointer;line-height:1.3}
+  .scale button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .subttl{display:flex;align-items:center;gap:8px;margin:14px 0 4px}
+  .subttl .mark{font-family:"Noto Serif JP",serif;font-weight:700;font-size:17px;color:var(--accent)}
+  .subttl b{font-size:13.5px}
+  .subttl .pt{margin-left:auto;font-size:12px;color:var(--ink-soft)}
+  .msg{border-radius:10px;padding:10px 12px;font-size:13px;margin-top:10px;display:none}
+  .msg.err{display:block;background:#fbeae7;color:var(--red)}
+  .msg.ok{display:block;background:#e7f2ea;color:#2f6e4f}
+  .doneview{text-align:center;padding:26px 10px}
+  .doneview .big{font-size:40px}
+  .foot{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>1on1面談 事前入力</h1>
+  <div class="cap">年2回の面談の前に、①〜⑤を上から順に入力してください（所要10〜15分）。内容はあなたの支援と面談のために使い、評価・処遇の単独の根拠にはしません。</div>
+
+  <!-- 氏名 -->
+  <div class="card">
+    <label>氏名（体調チェックと同じ表記で）</label>
+    <input type="text" id="f_name" placeholder="例：山田 花子">
+    <label>所属</label>
+    <input type="text" id="f_dept" placeholder="例：本館2階">
+    <button class="btn ghost" style="margin-top:12px" onclick="startPrep()">入力をはじめる</button>
+    <div class="msg" id="gate_msg"></div>
+  </div>
+
+  <div id="steps" style="display:none">
+
+  <!-- ① エゴグラム -->
+  <div class="card">
+    <div class="step"><span class="no">1</span><h2>エゴグラム診断</h2><span id="st_ego" class="todo">未実施</span></div>
+    <div class="note">今年まだ実施していない場合は、下のボタンから診断してください。終わったらこのページに戻り、「実施状況を再確認」を押してください。</div>
+    <a class="btn ghost" style="margin-top:10px" href="https://ooyakenosatokanrisya-cmd.github.io/ooyakestaff-app/egogram.html">エゴグラム診断へ</a>
+  </div>
+
+  <!-- ② キャリアアンカー -->
+  <div class="card">
+    <div class="step"><span class="no">2</span><h2>キャリアアンカー診断</h2><span id="st_car" class="todo">未実施</span></div>
+    <a class="btn ghost" style="margin-top:4px" href="https://ooyakenosatokanrisya-cmd.github.io/ooyakestaff-app/career.html">キャリアアンカー診断へ</a>
+    <button class="btn ghost" style="margin-top:8px" onclick="checkDiag(true)">①②の実施状況を再確認</button>
+  </div>
+
+  <!-- ③ コンディショニングチェック -->
+  <div class="card">
+    <div class="step"><span class="no">3</span><h2>コンディショニングチェック</h2></div>
+
+    <label>1. 現在腰痛はありますか？</label>
+    <div class="opts" data-k="backpain"><button class="opt">はい</button><button class="opt">いいえ</button></div>
+    <div id="bp_more" style="display:none">
+      <label>具体的に（受診状況・いつ頃から等）</label>
+      <textarea id="f_bpDetail" rows="2"></textarea>
+      <label>2. 腰痛は業務に支障がありますか？</label>
+      <div class="opts" data-k="backpainWork"><button class="opt">はい</button><button class="opt">いいえ</button></div>
+      <div id="bpw_more" style="display:none">
+        <label>具体的に（どのような業務・姿勢等）</label>
+        <textarea id="f_bpWorkDetail" rows="2"></textarea>
+      </div>
+      <label>希望する対策（あれば選択・複数可。最終決定は面談で行います）</label>
+      <div class="chips" id="measures"></div>
+    </div>
+
+    <label>体調（全般的に）</label>
+    <div class="opts" data-k="health"><button class="opt">非常に良い</button><button class="opt">良い</button><button class="opt">悪い</button></div>
+    <label>疲労度</label>
+    <div class="opts" data-k="fatigue"><button class="opt">強</button><button class="opt">中</button><button class="opt">弱</button></div>
+    <label>食欲</label>
+    <div class="opts" data-k="appetite"><button class="opt">良い</button><button class="opt">普通</button><button class="opt">悪い</button></div>
+    <label>毎日の朝食</label>
+    <div class="opts" data-k="breakfast"><button class="opt">毎日摂取</button><button class="opt">時々抜ける</button><button class="opt">摂取していない</button></div>
+    <label>体重の減少</label>
+    <div class="opts" data-k="weightloss"><button class="opt">ある</button><button class="opt">ない</button></div>
+    <label>睡眠時間</label>
+    <div class="opts" data-k="sleep"><button class="opt">毎日しっかりとれている</button><button class="opt">時間に変化がある</button><button class="opt">眠れていない</button></div>
+    <label>気分</label>
+    <div class="opts" data-k="mood"><button class="opt">明るい</button><button class="opt">暗い</button><button class="opt">波がある</button><button class="opt">落ち込んでいる</button></div>
+  </div>
+
+  <!-- ④ Check & Action -->
+  <div class="card">
+    <div class="step"><span class="no">4</span><h2>Check＆Action（25問の自己評価）</h2></div>
+    <div class="note">この半年の自分にどのくらいあてはまるかを選んでください（4 あてはまる ／ 3 どちらかというとあてはまる ／ 2 どちらかというとあてはまらない ／ 1 あてはまらない）。</div>
+    <div id="ca_items"></div>
+    <div class="note" id="ca_total" style="font-weight:700;color:var(--accent)"></div>
+  </div>
+
+  <!-- ⑤ キャリア・希望 -->
+  <div class="card">
+    <div class="step"><span class="no">5</span><h2>キャリア・希望</h2></div>
+    <label>いまの志向に近いもの</label>
+    <div class="opts" data-k="orient"><button class="opt">リーダー志向</button><button class="opt">専門志向</button><button class="opt">現場継続志向</button><button class="opt">迷っている</button></div>
+    <label>学びたい分野・狙いたい資格（あれば）</label>
+    <textarea id="f_learn" rows="2" placeholder="例：認知症ケア、喀痰吸引、介護福祉士"></textarea>
+    <label>異動・担当・夜勤の希望（あれば）</label>
+    <textarea id="f_move" rows="2" placeholder="例：夜勤を月2回までにしたい、デイを経験してみたい"></textarea>
+    <label>継続意向（この先も働き続けたいか）</label>
+    <div class="opts" data-k="cont"><button class="opt">はい</button><button class="opt">迷いがある</button><button class="opt">続けたくない</button></div>
+    <label>面談で相談したいこと（自由記入）</label>
+    <textarea id="f_topic" rows="2"></textarea>
+  </div>
+
+  <div class="card">
+    <button class="btn" id="submitBtn" onclick="submitPrep()">提出する</button>
+    <div class="msg" id="msg"></div>
+    <div class="note">提出後も面談前であれば、もう一度入力して提出し直すと上書きされます。</div>
+  </div>
+
+  </div><!-- /steps -->
+
+  <div id="doneview" class="card doneview" style="display:none">
+    <div class="big">🌿</div>
+    <h2 style="font-family:'Noto Serif JP',serif;color:var(--accent);margin:6px 0">提出しました</h2>
+    <p style="font-size:13px">おつかれさまでした。面談当日は、この内容をもとに上司と一緒にふり返ります。<br>持ち物はありません。</p>
+    <button class="btn ghost" style="margin-top:14px" onclick="location.reload()">最初に戻る</button>
+  </div>
+
+  <div class="foot">介護老人保健施設おおやけの里 ｜ 介護職員トータルケア</div>
+</div>
+
+<script>
+/* ============ 設定（診断アプリと同一） ============ */
+const FB_CONFIG={apiKey:"AIzaSyDCkpzd_zGEL5DXNDP8jJPH-WPC51KhBmw",projectId:"ooyake-staff"};
+const $=id=>document.getElementById(id);
+
+/* 匿名認証（egogram.html と同じ方式・同じ保存キー） */
+async function getAuthToken(){
+  const RT_KEY='oyake_auth_rt';let rt=null;try{rt=localStorage.getItem(RT_KEY);}catch(e){}
+  if(rt){try{
+    const r=await fetch(`https://securetoken.googleapis.com/v1/token?key=${FB_CONFIG.apiKey}`,
+      {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(rt)});
+    if(r.ok)return (await r.json()).id_token;
+  }catch(e){}}
+  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB_CONFIG.apiKey}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
+  if(!r.ok)throw new Error('認証に失敗 HTTP '+r.status);
+  const d=await r.json();
+  try{localStorage.setItem(RT_KEY,d.refreshToken);}catch(e){}
+  return d.idToken;
+}
+const docId=s=>encodeURIComponent(String(s).replace(/[\/\\#?]/g,'-'));
+async function getDoc(coll,id,token){
+  const url=`https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${coll}/${docId(id)}?key=${FB_CONFIG.apiKey}`;
+  const r=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+  if(r.status===404)return null;
+  if(!r.ok)throw new Error(coll+' HTTP '+r.status);
+  return r.json();
+}
+
+/* ============ 実施期（年2回：4〜9月=上期、10〜3月=下期） ============ */
+function termInfo(){
+  const now=new Date();const y=now.getFullYear(),m=now.getMonth()+1;
+  const fy=m>=4?y:y-1;
+  const half=(m>=4&&m<=9)?'上期':'下期';
+  return {fy,half,key:fy+half,calYear:y};
+}
+
+/* ============ 設問定義 ============ */
+const MEASURES=['受診','作業内容の見直し','休暇','介助なし','ストレッチ','作業環境の見直し','介助方法の指導','業務改善','ストレス対応','利用者の転室','腰部保護ベルトの使用','膝当て付ズボンの使用','スタッフへ周知','衛生管理委員会へ報告','面談・再評価','その他'];
+const CA_SECTIONS=[
+ {k:'a',mark:'A',name:'ご利用者との関わり',items:[
+  'ある特定のご利用者に対して、横柄（おうへい）な態度、受答えをしないように心がけている',
+  'ご利用者の人格・人柄、個性を大切にし、接し方や呼称に配慮している',
+  'ご利用者の訴え、ご意見に対し、無視や否定的な態度をとらないよう心がけている',
+  'ご利用者への説明は、わかり易い言葉で行い、威圧的な態度、命令口調にならないように心がけている',
+  'ご利用者への対応、受答え、挨拶等は丁寧に行うよう日々心がけている']},
+ {k:'b',mark:'B',name:'専門職が大切にしなければいけないこと',items:[
+  '職務上知りえたご利用者の個人情報については、慎重に取り扱っている（個人情報の保護）',
+  '入浴・排泄時に、ご利用者の羞恥心に十分配慮し実践している（プライバシーの配慮）',
+  'サービス提供に関わる記録書類について適切に記入している（記録の保存）',
+  '福祉職、医療職、地域のボランティア、家族等との連携を日々の実践で心がけている（連携）',
+  '目の前のご利用者一人ひとりをかけがえのない存在として尊重する姿勢を大切にし、実践している（権利擁護）']},
+ {k:'c',mark:'C',name:'チームワーク・協働',items:[
+  '日々のサービス提供に関わる相談・報告など、同僚や上長への「報告・連絡・相談」を心がけている',
+  '職場の同僚と、日々のサービス提供に関わる相談など、同僚とのコミュニケーションを心がけている',
+  '一人で対応できないとき、二人で介助をする必要がある場合に、一人で対応・介助をすることなく、助けを求めて対応している',
+  '自分以外の職種（医療職・リハビリ職・事務・清掃係など）に対して、しっかりとあいさつをしている',
+  '自分以外の職種（医療職・リハビリ職・事務・清掃係など）に対して、見下す、馬鹿にする、批判することなく協働している']},
+ {k:'d',mark:'D',name:'人財育成',items:[
+  '職場で決まっている法定研修（高齢者虐待・個人情報等）に、確実に参加している／不参加の場合はフォローしている',
+  '研修会への参加、資格取得など自分自身のスキルアップを心がけている（資質向上）',
+  '業務が上手くできない、わからない職員ができるようになるために、積極的にかかわるように心がけている',
+  '将来のキャリアに対して、支援（相談・研修等）やアドバイスを受けている',
+  '職員を育成する方針・研修計画などをしっかりと把握している']},
+ {k:'e',mark:'E',name:'法人・事業所の風土',items:[
+  '挨拶・声かけ・認める・ほめるといった組織風土がある',
+  '職員が自由にアイデアや意見を言える組織風土がある',
+  '新しいアイデアを取り入れたり、難しい課題に取組んだりする組織風土がある',
+  '質の高いケアへの意識や向上心を育てる組織風土がある',
+  '自主性を尊重し、仕事を任せ、それを支援する組織風土がある']}];
+
+/* ============ 状態 ============ */
+const state={backpain:'',backpainWork:'',health:'',fatigue:'',appetite:'',breakfast:'',weightloss:'',sleep:'',mood:'',orient:'',cont:'',measures:[],ca:Array(25).fill(0)};
+
+/* 選択式ボタンの共通処理 */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.opts .opt');if(!b)return;
+  const g=b.parentElement,k=g.dataset.k;
+  g.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');state[k]=b.textContent;
+  if(k==='backpain')$('bp_more').style.display=state.backpain==='はい'?'':'none';
+  if(k==='backpainWork')$('bpw_more').style.display=state.backpainWork==='はい'?'':'none';
+});
+
+/* 対策チップ */
+(function(){
+  $('measures').innerHTML=MEASURES.map((m,i)=>'<button class="chip" data-i="'+i+'">'+m+'</button>').join('');
+  $('measures').addEventListener('click',e=>{
+    const c=e.target.closest('.chip');if(!c)return;
+    const m=MEASURES[+c.dataset.i];
+    const idx=state.measures.indexOf(m);
+    if(idx>=0){state.measures.splice(idx,1);c.classList.remove('on');}
+    else{state.measures.push(m);c.classList.add('on');}
+  });
+})();
+
+/* Check&Action 25問 */
+(function(){
+  let no=0;
+  $('ca_items').innerHTML=CA_SECTIONS.map(sec=>{
+    const qs=sec.items.map(t=>{
+      const i=no++;
+      return '<div class="qa"><div class="qt">'+(i+1)+'．'+t+'</div>'
+        +'<div class="scale" data-i="'+i+'">'
+        +[4,3,2,1].map(v=>'<button data-v="'+v+'">'+v+'</button>').join('')+'</div></div>';
+    }).join('');
+    return '<div class="subttl"><span class="mark">'+sec.mark+'</span><b>'+sec.name+'</b><span class="pt" id="pt_'+sec.k+'">0／20点</span></div>'+qs;
+  }).join('');
+  $('ca_items').addEventListener('click',e=>{
+    const b=e.target.closest('.scale button');if(!b)return;
+    const g=b.parentElement,i=+g.dataset.i;
+    g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');state.ca[i]=+b.dataset.v;
+    updateCA();
+  });
+})();
+function caSub(){
+  const sub={};CA_SECTIONS.forEach((sec,si)=>{sub[sec.k]=state.ca.slice(si*5,si*5+5).reduce((a,b)=>a+b,0);});
+  return sub;
+}
+function updateCA(){
+  const sub=caSub();let total=0;
+  CA_SECTIONS.forEach(sec=>{$('pt_'+sec.k).textContent=sub[sec.k]+'／20点';total+=sub[sec.k];});
+  const answered=state.ca.filter(v=>v>0).length;
+  $('ca_total').textContent='回答 '+answered+'／25問　合計 '+total+'／100点';
+}
+
+/* ============ 開始・診断チェック ============ */
+function setMsg(el,cls,t){const m=$(el);m.className='msg '+(cls||'');m.textContent=t;}
+function startPrep(){
+  const n=$('f_name').value.trim();
+  if(!n){setMsg('gate_msg','err','氏名を入力してください。');return;}
+  try{localStorage.setItem('hc_name',n);localStorage.setItem('hc_dept',$('f_dept').value.trim());}catch(e){}
+  $('steps').style.display='';
+  setMsg('gate_msg','ok','①から順に進めてください。');
+  checkDiag(false);
+  window.scrollTo({top:$('steps').offsetTop-10,behavior:'smooth'});
+}
+async function checkDiag(notify){
+  const n=$('f_name').value.trim();if(!n)return;
+  const {calYear}=termInfo();
+  const nAlt=n.replace(/[\s\u3000]+/g,'');   // 空白なしの表記ゆれも照会
+  try{
+    const token=await getAuthToken();
+    const tryGet=async coll=>{
+      let d=await getDoc(coll,n+'_'+calYear,token);
+      if(!d&&nAlt!==n)d=await getDoc(coll,nAlt+'_'+calYear,token);
+      return d;
+    };
+    const ego=await tryGet('egograms');
+    const car=await tryGet('careerAnchors');
+    const set=(id,doc)=>{const el=$(id);
+      if(doc){el.className='done';el.textContent='実施済み（'+calYear+'年）';}
+      else{el.className='todo';el.textContent='未実施';}};
+    set('st_ego',ego);set('st_car',car);
+    if(notify)setMsg('msg',(ego&&car)?'ok':'err',(ego&&car)?'①②とも実施済みです。③へ進んでください。':'未実施の診断があります。ボタンから診断を済ませてから再確認してください。');
+  }catch(e){if(notify)setMsg('msg','err','確認に失敗しました：'+e.message);}
+}
+/* 氏名の初期値（体調チェックと共有） */
+try{$('f_name').value=localStorage.getItem('hc_name')||'';$('f_dept').value=localStorage.getItem('hc_dept')||'';}catch(e){}
+
+/* ============ 提出 ============ */
+function validate(){
+  const need=['backpain','health','fatigue','appetite','breakfast','weightloss','sleep','mood'];
+  for(const k of need)if(!state[k])return 'コンディショニングチェックに未回答の項目があります。';
+  if(state.backpain==='はい'&&!state.backpainWork)return '腰痛の業務への支障（はい・いいえ）を選択してください。';
+  if(state.ca.some(v=>v===0))return 'Check＆Actionに未回答の設問があります（'+state.ca.filter(v=>v>0).length+'／25問回答済み）。';
+  if(!state.orient)return '⑤の志向を選択してください。';
+  if(!state.cont)return '⑤の継続意向を選択してください。';
+  return null;
+}
+async function submitPrep(){
+  const n=$('f_name').value.trim();
+  if(!n){setMsg('msg','err','氏名を入力してください。');return;}
+  const err=validate();
+  if(err){setMsg('msg','err',err);return;}
+  const {fy,half,key}=termInfo();
+  const now=new Date().toISOString();
+  const cond={backpain:state.backpain,backpainDetail:$('f_bpDetail').value.trim(),
+    backpainWork:state.backpainWork,backpainWorkDetail:$('f_bpWorkDetail').value.trim(),
+    measures:state.measures.slice(),health:state.health,fatigue:state.fatigue,appetite:state.appetite,
+    breakfast:state.breakfast,weightloss:state.weightloss,sleep:state.sleep,mood:state.mood};
+  const ca={items:state.ca.slice(),sub:caSub()};ca.total=Object.values(ca.sub).reduce((a,b)=>a+b,0);
+  const wish={orient:state.orient,learn:$('f_learn').value.trim(),move:$('f_move').value.trim(),
+    cont:state.cont,topic:$('f_topic').value.trim()};
+  const body={fields:{
+    name:{stringValue:n},dept:{stringValue:$('f_dept').value.trim()},
+    term:{stringValue:key},fy:{stringValue:String(fy)},half:{stringValue:half},
+    date:{stringValue:now.slice(0,10)},ts:{stringValue:now},
+    cond:{stringValue:JSON.stringify(cond)},ca:{stringValue:JSON.stringify(ca)},wish:{stringValue:JSON.stringify(wish)}
+  }};
+  const b=$('submitBtn');b.disabled=true;b.textContent='送信中…';
+  try{
+    const token=await getAuthToken();
+    const url=`https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/mendanPrep/${docId(n+'_'+key)}?key=${FB_CONFIG.apiKey}`;
+    const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error('HTTP '+r.status+'：'+(await r.text()).slice(0,120));
+    $('steps').style.display='none';document.querySelector('.card').style.display='none';
+    $('doneview').style.display='';window.scrollTo(0,0);
+  }catch(e){
+    setMsg('msg','err','保存に失敗しました：'+e.message+'　通信環境を確認してもう一度お試しください。');
+  }finally{b.disabled=false;b.textContent='提出する';}
+}
+updateCA();
+</script>
+</body>
+</html>
